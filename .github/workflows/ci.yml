@@ -36,7 +36,12 @@ jobs:
       - name: Install system dependencies for PyQt
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxcb-xinerama0 libxkbcommon-x11-0 libgl1-mesa-glx postgresql-client
+          sudo apt-get install -y \
+            libxcb-xinerama0 \
+            libxkbcommon-x11-0 \
+            libgl1 \
+            libegl1 \
+            postgresql-client
 
       - name: Install Python dependencies (CPU-only)
         run: |
