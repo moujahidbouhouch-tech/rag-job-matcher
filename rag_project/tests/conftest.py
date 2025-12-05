@@ -164,12 +164,18 @@ def _test_db_settings(source: dict) -> dict:
 
 def _get_test_target() -> dict:
     """Build test DB target from constants/env."""
-    password = TEST_DB_PASSWORD or os.getenv("TEST_DB_PASSWORD") or DB_DEFAULT_PASSWORD or os.getenv("PGPASSWORD")
+    # PRIORITIZE os.getenv for ALL fields to respect CI settings
+    host = os.getenv("TEST_DB_HOST") or TEST_DB_HOST or "127.0.0.1"
+    port = os.getenv("TEST_DB_PORT") or TEST_DB_PORT or 5433
+    dbname = os.getenv("TEST_DB_NAME") or TEST_DB_NAME or "rag_test_db"
+    user = os.getenv("TEST_DB_USER") or TEST_DB_USER or "rag"
+    password = os.getenv("TEST_DB_PASSWORD") or TEST_DB_PASSWORD or DB_DEFAULT_PASSWORD or os.getenv("PGPASSWORD")
+    
     return {
-        "host": TEST_DB_HOST or "127.0.0.1",
-        "port": TEST_DB_PORT or 5433,
-        "dbname": TEST_DB_NAME or "rag_test_db",
-        "user": TEST_DB_USER or "rag",
+        "host": host,
+        "port": int(port),
+        "dbname": dbname,
+        "user": user,
         "password": password,
     }
 
