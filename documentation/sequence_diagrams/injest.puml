@@ -1,0 +1,31 @@
+@startuml
+title Ingestion Flow - GUI → Embedding → Match Score → Storage
+
+actor User as U
+
+participant "PyQt GUI\n(Ingestion Tab)" as GUI
+participant "RAG Service\n(Python)" as RAG
+participant "Embedding Model\nbge-m3" as EMB
+database "Postgres + pgvector" as PG
+
+U -> GUI : Select file / job text\n+ metadata; click Ingest
+GUI -> RAG : ingest_file(...) / ingest_job(...)
+
+RAG -> RAG : Parse, clean, normalize
+RAG -> RAG : Chunk documents\n(~450 words, overlap; CV uses LLM chunker)
+
+RAG -> EMB : Compute embeddings
+EMB --> RAG : Embeddings (1024-d vectors)
+
+RAG -> PG : INSERT job metadata + chunks + embeddings
+PG --> RAG : ACK
+
+RAG -> RAG : Compute match_score\n(job ↔ profile similarity)
+
+RAG -> PG : UPDATE jobs\nSET match_score = value
+PG --> RAG : ACK
+
+RAG --> GUI : Ingestion summary\n(count, errors, match scores)
+GUI --> U : Show status
+
+@enduml

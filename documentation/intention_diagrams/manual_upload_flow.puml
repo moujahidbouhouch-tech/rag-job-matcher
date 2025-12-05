@@ -1,0 +1,30 @@
+@startuml manual_upload_flow
+title Intention Diagram - Manual Upload Flow (PyQt)
+
+start
+
+:User opens desktop UI\n(PyQt);
+:Select file from disk\n+ choose doc_type;
+
+:Validate file path & doc_type;
+
+:Load file contents\n(from local filesystem);
+
+:Parse based on doc_type\n(PDF, DOCX, TXT, etc.);
+:Normalize text + metadata;
+
+:Chunk document\n(structured, ~450 words + overlap;\nCV uses LLM chunker);
+
+:Embed chunks with bge-m3;
+
+:Prepare DB rows\n(doc/job, chunk, embedding, metadata);
+:INSERT into Postgres + pgvector;
+
+:Compute match_score if applicable\n(store with job);
+
+:Build ingestion summary\n(count, errors, scores);
+:Display status in UI;
+
+stop
+
+@enduml

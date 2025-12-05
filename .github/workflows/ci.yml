@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system dependencies for PyQt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxcb-xinerama0 libxkbcommon-x11-0 libgl1-mesa-glx postgresql-client
+
+      - name: Install Python dependencies (CPU-only)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.9.1+cpu
+          python -m pip install -r requirements-ci.txt
+
+      - name: Set environment variables
+        run: |
+          echo "TEST_DB_HOST=localhost" >> $GITHUB_ENV
+          echo "TEST_DB_PORT=5432" >> $GITHUB_ENV
+          echo "TEST_DB_NAME=rag_test" >> $GITHUB_ENV
+          echo "TEST_DB_USER=postgres" >> $GITHUB_ENV
+          echo "TEST_DB_PASSWORD=postgres" >> $GITHUB_ENV
+          echo "DB_POSTGRESDB_HOST=localhost" >> $GITHUB_ENV
+          echo "DB_POSTGRESDB_PORT=5432" >> $GITHUB_ENV
+          echo "RUN_LLM_INFRA_TESTS=0" >> $GITHUB_ENV
+          echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
+
+      - name: Setup test database
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE rag_test;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d rag_test -c "CREATE EXTENSION vector;"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d rag_test -f scripts/rag_schema.sql
+
+      - name: Run tests
+        run: |
+          pytest rag_project/tests/ -v --tb=short
+
+      - name: Check code formatting
+        run: |
+          black --check .

@@ -1,0 +1,33 @@
+@startuml
+title Query Flow - GUI Chat → Retrieval → LLM Answer
+
+actor User as U
+
+participant "PyQt GUI\n(Chat Panel)" as GUI
+participant "RAG Service\n(Python)" as RAG
+database "Postgres + pgvector" as PG
+participant "Embedding Model\nbge-m3" as EMB
+participant "Ollama API" as OLL
+participant "qwen2.5:7b-instruct" as LLM
+
+U -> GUI : Ask question\n(chat input)
+GUI -> RAG : query(question)\n(direct call)
+
+RAG -> EMB : Embed user query
+EMB --> RAG : Query embedding
+
+RAG -> PG : SELECT top-k\npgvector similarity search
+PG --> RAG : Top-k chunks + metadata\n(IDs, links, match_score)
+
+RAG -> RAG : Score results\n(similarity + match_score + recency)
+RAG -> RAG : Build context + prompt
+
+RAG -> OLL : /api/generate\n(prompt with retrieved context)
+OLL -> LLM : Infer response
+LLM --> OLL : Answer tokens
+OLL --> RAG : Final answer
+
+RAG --> GUI : Answer + cited snippets\n(IDs, links, match_score)
+GUI --> U : Display formatted result
+
+@enduml

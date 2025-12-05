@@ -1,0 +1,8 @@
+Dear Hiring Manager,
+
+I am excited to apply for the AI Software Engineer position. My recent work focused on building retrieval-augmented generation pipelines with strong monitoring. I collaborate closely with data scientists and product teams to ship reliable features.
+
+Thank you for your consideration.
+
+Sincerely,
+John Doe

@@ -1,0 +1,26 @@
+@startuml ingestion_flow
+title Intention Diagram - Ingestion Flow (GUI / external jobs)
+
+start
+
+:Trigger ingestion\n(e.g. GUI or external payload);
+:Receive job text + metadata;
+
+:Parse & clean text\n(trim/HTML strip as needed);
+:Optional metadata extraction via LLM\n(snippet only);
+
+:Chunk documents\n(structured, ~450 words + overlap);
+
+:Embed chunks with bge-m3\n(1024-d vectors);
+
+:Prepare DB rows\n(job, chunk, embedding, metadata);
+:INSERT into Postgres + pgvector;
+
+:Compute search score fields\n(match_score stored with job);
+
+:Build ingestion summary\n(count, errors, match_scores);
+
+stop
+
+@enduml
+

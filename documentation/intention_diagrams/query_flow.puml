@@ -1,0 +1,28 @@
+@startuml query_flow
+title Intention Diagram - Query Flow (GUI Chat over Jobs)
+
+start
+
+:Receive user question\n(from PyQt chat);
+
+:Normalize question\n(trim, language, intent hints);
+
+:Embed query with bge-m3;
+
+:Vector search in pgvector\n(top-k similar chunks);
+:Fetch chunks + job metadata\n(IDs, links, match_score, dates);
+
+:Rank & filter results\n(by similarity, match_score, recency);
+:Select final context\n(top n chunks);
+
+:Build LLM prompt\n(context + user question);
+
+:Call LLM (qwen2.5:7b)\nvia Ollama API;
+:Receive raw answer text;
+
+:Post-process answer\n(format, attach citations);
+:Return answer + cited snippets\n(IDs, links, scores) to GUI;
+
+stop
+
+@enduml

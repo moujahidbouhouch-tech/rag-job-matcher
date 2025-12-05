@@ -1,0 +1,7 @@
+Title: Efficient Chunking for Retrieval-Augmented Generation
+
+Abstract:
+This work evaluates structure-aware chunking for long technical documents. We compare fixed-size chunks to sections aligned with headings and table of contents markers. We measure downstream retrieval quality and show that header-aware chunking improves recall without increasing token cost.
+
+Introduction:
+Retrieval systems depend on well-formed chunks. Inconsistent boundaries lead to poor recall. We present a method that filters table of contents noise, removes page numbers, and deduplicates repeated headers before chunking.

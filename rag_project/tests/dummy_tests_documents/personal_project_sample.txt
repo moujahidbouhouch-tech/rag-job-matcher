@@ -1,0 +1,3 @@
+Project: Sensor Data Playground
+
+Built a small platform to ingest, chunk, and embed hobby sensor logs. Implemented dashboards to visualize embeddings and similarity results. Focused on fast iteration and clear documentation so others can extend the pipelines.

@@ -1,0 +1,59 @@
+# Python / virtualenv
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+env/
+*.egg-info/
+
+# Env & secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.crt
+!.env.example
+
+# Logs and temp files
+logs/
+*.log
+tmp/
+*.tmp
+
+# Caches (tests, tooling, models)
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+hf_cache/
+transformers_cache/
+pip-cache/
+
+# Browsers/drivers and other binaries
+bin/
+
+# Local data artifacts
+data/
+*.db
+*.sqlite
+*.sql
+!scripts/rag_schema.sql
+*.dump
+*.bak
+
+# Personal/local scripts and profiles
+scripts/personal/
+
+# Editor/OS noise
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Personal scratchpads
+archive/

@@ -1,0 +1,11 @@
+ACME Industrial Sensors - Senior Data Engineer
+
+Location: Berlin
+
+We are looking for a data engineer to build and maintain ETL pipelines for sensor data. The role includes:
+- Owning batch and streaming ingestion (Kafka, PostgreSQL)
+- Building monitoring dashboards and alerting
+- Collaborating with data scientists on feature pipelines
+- Documenting data contracts and SLAs
+
+Preferred skills: Python, SQL, Airflow, Docker, Grafana.

@@ -1,0 +1,33 @@
+@startuml
+title Manual Upload Flow - PyQt UI → RAG → Embedding → Storage
+
+actor User as U
+
+participant "PyQt UI\n(Desktop)" as UI
+participant "RAG Service\n(Python)" as RAG
+participant "Embedding Model\nbge-m3" as EMB
+database "Postgres + pgvector" as PG
+
+U -> UI : Open app\n(select file + doc type)
+U -> UI : Click \"Ingest\"
+
+UI -> RAG : ingest_file(file_path, doc_type)\n(direct Python call)
+
+RAG -> RAG : Load file from disk
+RAG -> RAG : Parse based on doc_type\n(clean + normalize)
+RAG -> RAG : Chunk document\n(structured ~450 words, overlap;\nCV uses LLM chunker)
+
+RAG -> EMB : Compute embeddings for chunks
+EMB --> RAG : Embeddings (1024-d vectors)
+
+RAG -> PG : INSERT doc/job metadata\n+ chunks + embeddings
+PG --> RAG : ACK
+
+RAG -> RAG : Optionally compute match_score\n(if doc_type = job)
+RAG -> PG : UPDATE job record\nSET match_score = value
+PG --> RAG : ACK
+
+RAG --> UI : Ingestion summary\n(count, errors, match_scores)
+UI --> U : Show status + details
+
+@enduml

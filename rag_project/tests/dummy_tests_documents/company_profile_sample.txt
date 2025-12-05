@@ -1,0 +1,3 @@
+Company: ACME Industrial Sensors
+
+We design and manufacture industrial sensing solutions for manufacturing and energy clients. Our platform includes embedded firmware, cloud ingestion, and analytics dashboards. We emphasize reliability, clear documentation, and long-term support.

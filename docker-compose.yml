@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: ankane/pgvector:v0.5.1
+    container_name: n8n-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_N8N}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_N8N}
+      - POSTGRES_DB=${POSTGRES_DB_N8N}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER_N8N}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  rag-postgres:
+    image: ankane/pgvector:v0.5.1
+    container_name: rag-db
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT_RAG:-5433}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_RAG}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_RAG}
+      - POSTGRES_DB=${POSTGRES_DB_RAG}
+    volumes:
+      - rag_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER_RAG}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  n8n:
+    build: .
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT}:5678"
+    environment:
+      - DB_TYPE=${DB_TYPE}
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=${POSTGRES_PORT_N8N}
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB_N8N}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER_N8N}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD_N8N}
+      - CHROMIUM_BIN=/usr/lib/chromium/chrome
+      - CHROMEDRIVER_PATH=/usr/lib/chromium/chromedriver
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_HOST=${N8N_HOST}
+      - N8N_PORT=${N8N_PORT}
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./scripts:/home/node/scripts
+      - ./bin:/home/node/bin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${N8N_PORT:-5678}/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  rag_postgres_data:
+  n8n_data:

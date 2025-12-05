@@ -1,0 +1,19 @@
+John Doe
+AI Software Engineer
+Berlin, Germany
+john.doe@example.com
+
+Profile:
+Engineer focused on retrieval-augmented generation systems. Experienced with Python, embeddings, and evaluation pipelines.
+
+Experience:
+2022-Now | ACME AI | Senior ML Engineer
+- Built chunking and embedding pipelines with pgvector
+- Added observability for LLM prompts and latency
+- Deployed batch ingestion jobs on Docker/Kubernetes
+
+Education:
+M.Sc. Computer Science, TU Berlin
+
+Skills:
+Python, SQL, FastAPI, Docker, pgvector, Ollama
