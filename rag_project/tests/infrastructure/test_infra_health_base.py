@@ -8,7 +8,7 @@ os.environ.setdefault("TEST_DB_HOST", "127.0.0.1")
 os.environ.setdefault("TEST_DB_PORT", "5433")
 os.environ.setdefault("TEST_DB_NAME", "rag_test_db")
 os.environ.setdefault("TEST_DB_USER", "rag")
-os.environ.setdefault("TEST_DB_PASSWORD")
+os.environ.setdefault("TEST_DB_PASSWORD", "")
 
 from rag_project.infrastructure.health import check_db, check_models, check_ollama, check_pgvector
 
