@@ -141,7 +141,9 @@ def _assert_valid_identifier(value: str, label: str):
         )
 
 
-def _run_psql_with_fallback(base_cmd: list[str], env: dict, *, sql_input: str | None = None):
+def _run_psql_with_fallback(
+    base_cmd: list[str], env: dict, *, sql_input: str | None = None
+):
     """
     Run a psql command using local binaries; if unavailable, retry via docker exec
     against the TEST_DB_CONTAINER (default: rag-db).
@@ -431,6 +433,7 @@ def _ensure_pgvector_and_schema():
     if missing:
         print(f"[tests] Creating missing tables via schema apply: {missing}")
         _apply_schema(target)
+
 
 def _psql_env(settings: dict) -> dict:
     env = os.environ.copy()

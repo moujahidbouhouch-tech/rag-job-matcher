@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-import torch 
+import torch
 
 from PyQt5 import QtWidgets  # type: ignore
 
