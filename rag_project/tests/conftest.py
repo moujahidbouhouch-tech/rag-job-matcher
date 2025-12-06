@@ -141,6 +141,46 @@ def _assert_valid_identifier(value: str, label: str):
         )
 
 
+def _run_psql_with_fallback(base_cmd: list[str], env: dict, *, sql_input: str | None = None):
+    """
+    Run a psql command using local binaries; if unavailable, retry via docker exec
+    against the TEST_DB_CONTAINER (default: rag-db).
+    """
+    try:
+        subprocess.run(
+            base_cmd,
+            check=True,
+            env=env,
+            capture_output=True,
+            text=True,
+            input=sql_input,
+        )
+        return
+    except FileNotFoundError:
+        container_name = os.environ.get("TEST_DB_CONTAINER", "rag-db")
+        print(f"[tests] psql not found; retrying via docker exec {container_name}")
+        stripped_cmd = []
+        skip_next = False
+        # When running inside the DB container we don't need host/port flags.
+        for idx, arg in enumerate(base_cmd):
+            if skip_next:
+                skip_next = False
+                continue
+            if arg in {"-h", "--host", "-p", "--port"}:
+                skip_next = True
+                continue
+            stripped_cmd.append(arg)
+        docker_cmd = ["docker", "exec", "-i", container_name] + stripped_cmd
+        subprocess.run(
+            docker_cmd,
+            check=True,
+            env=env,
+            capture_output=True,
+            text=True,
+            input=sql_input,
+        )
+
+
 def _service_bootstrap():
     flag = os.getenv(INTEGRATION_BOOTSTRAP_ENV, "0").lower()
     if flag in {"0", "false", "no"}:
@@ -332,6 +372,66 @@ def _ensure_test_db_exists(target: dict):
                 )
 
 
+def _apply_schema(target: dict):
+    """Apply schema and pgvector extension to the target DB using psql or docker fallback."""
+    schema_path = ROOT.parent / "scripts" / "rag_schema.sql"
+    if not schema_path.is_file():
+        print("[tests] schema file missing; skipping schema apply")
+        return
+    sql_text = schema_path.read_text(encoding="utf-8")
+    env = _psql_env(target)
+    cmd = [
+        "psql",
+        "-h",
+        str(target["host"]),
+        "-p",
+        str(target["port"]),
+        "-U",
+        str(target["user"]),
+        "-d",
+        str(target["dbname"]),
+        "-v",
+        "ON_ERROR_STOP=1",
+    ]
+    print(f"[tests] Applying schema to {target['dbname']}")
+    _run_psql_with_fallback(cmd, env, sql_input=sql_text)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_pgvector_and_schema():
+    """Ensure pgvector extension and required tables exist in the test database."""
+    try:
+        import psycopg  # noqa: WPS433
+    except ImportError:
+        return
+
+    target = _get_test_target()
+    try:
+        with psycopg.connect(
+            f"host={target['host']} port={target['port']} dbname={target['dbname']} user={target['user']}",
+            password=target.get("password"),
+            connect_timeout=10,
+        ) as conn:
+            conn.autocommit = True
+            with conn.cursor() as cur:
+                cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                cur.execute(
+                    """
+                    SELECT table_name FROM information_schema.tables
+                    WHERE table_schema='public' AND table_name = ANY(%s)
+                    """,
+                    (list(REQUIRED_TABLES),),
+                )
+                existing = {row[0] for row in cur.fetchall()}
+            missing = set(REQUIRED_TABLES) - existing
+    except psycopg.OperationalError as exc:  # noqa: WPS433
+        print(f"[tests] Skipping schema ensure; DB unreachable ({exc})")
+        return
+
+    if missing:
+        print(f"[tests] Creating missing tables via schema apply: {missing}")
+        _apply_schema(target)
+
 def _psql_env(settings: dict) -> dict:
     env = os.environ.copy()
     if settings.get("password"):
@@ -424,6 +524,7 @@ def _truncate_tables(target: dict):
     if not table_list:
         return
     quoted = ", ".join(f'"{t}"' for t in table_list)
+    truncate_sql = f"TRUNCATE {quoted} RESTART IDENTITY CASCADE"
     print(
         f"[tests] TRUNCATE target db={target['dbname']} host={target['host']} port={target['port']} "
         f"user={target['user']} tables={table_list}"
@@ -439,11 +540,41 @@ def _truncate_tables(target: dict):
         "-d",
         str(target["dbname"]),
         "-c",
-        f"TRUNCATE {quoted} RESTART IDENTITY CASCADE",
+        truncate_sql,
     ]
     env = _psql_env(target)
     try:
         subprocess.run(cmd, check=True, env=env, capture_output=True, text=True)
+    except FileNotFoundError:
+        # Fallback for local environments without psql on PATH (e.g., Windows without PostgreSQL client).
+        container_name = os.environ.get("TEST_DB_CONTAINER", "rag-db")
+        docker_cmd = [
+            "docker",
+            "exec",
+            container_name,
+            "psql",
+            "-U",
+            str(target["user"]),
+            "-d",
+            str(target["dbname"]),
+            "-c",
+            truncate_sql,
+        ]
+        print(f"[tests] TRUNCATE via docker exec {container_name}")
+        try:
+            subprocess.run(
+                docker_cmd, check=True, env=env, capture_output=True, text=True
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "psql not found and docker is unavailable; install psql client "
+                "or ensure Docker and the rag-db container are running"
+            ) from exc
+        except subprocess.CalledProcessError as exc:
+            if "does not exist" in exc.stderr:
+                print("[tests] TRUNCATE skipped, tables not yet created (docker)")
+                return
+            raise RuntimeError(f"TRUNCATE via docker failed: {exc.stderr}") from exc
     except subprocess.CalledProcessError as exc:
         if "does not exist" in exc.stderr:
             print(f"[tests] TRUNCATE skipped, tables not yet created")
