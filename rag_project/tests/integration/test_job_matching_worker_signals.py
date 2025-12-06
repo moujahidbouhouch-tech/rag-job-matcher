@@ -43,8 +43,6 @@ def test_worker_signals_fire_in_order(qtbot):
     worker.evaluation_ready.connect(lambda req, ev: signals.append(("evaluation", req.name)))
     worker.analysis_complete.connect(lambda r: signals.append(("complete", r.match_rate)))
     
-    worker.start()  # Start thread properly
-    
     # Wait for signal AND process event queue
     with qtbot.waitSignal(worker.analysis_complete, timeout=5000):
         worker.start()
@@ -54,5 +52,9 @@ def test_worker_signals_fire_in_order(qtbot):
     
     # Now assert
     assert len(signals) > 0, f"No signals captured! signals={signals}"
-    assert signals[0][0] == "requirements"
-    assert signals[-1][0] == "complete"
+    assert signals[0][0] == "requirements", f"Expected 'requirements' first, got {signals[0]}"
+    assert signals[-1][0] == "complete", f"Expected 'complete' last, got {signals[-1]}"
+        
+    # Verify we got evaluations for both requirements
+    evaluation_signals = [s for s in signals if s[0] == "evaluation"]
+    assert len(evaluation_signals) == 2, f"Expected 2 evaluations, got {len(evaluation_signals)}"
