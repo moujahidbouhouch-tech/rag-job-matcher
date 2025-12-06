@@ -54,4 +54,6 @@ def test_ollama_models_available():
 
 
 def test_embedding_models_cached():
+    if os.getenv("CI"):
+        pytest.skip("Skipping model cache check in CI environment")
     check_models()

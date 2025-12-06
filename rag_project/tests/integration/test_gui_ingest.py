@@ -9,9 +9,16 @@ from rag_project.rag_gui.workers.ingestion_worker import IngestionWorker
 class FakeIngestion:
     def __init__(self):
         self.called_with = None
-
+    
     def ingest_file(self, file_path: str, metadata=None, progress_cb=None):
+        if "missing" in str(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+
         self.called_with = (file_path, metadata)
+        
+        if progress_cb:
+             progress_cb("done", {"message": "Ingestion completed"})
+        
         return uuid.uuid4()
 
 

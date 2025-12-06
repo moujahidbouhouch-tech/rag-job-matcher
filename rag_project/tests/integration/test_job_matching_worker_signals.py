@@ -47,7 +47,7 @@ def test_worker_signals_fire_in_order(qtbot):
     
     # Wait for signal AND process event queue
     with qtbot.waitSignal(worker.analysis_complete, timeout=5000):
-        pass
+        worker.start()
     
     # Force event loop processing
     qtbot.wait(100)  # Give slots time to execute
