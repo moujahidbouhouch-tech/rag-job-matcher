@@ -4,7 +4,12 @@ from rag_project.rag_core.domain.models import Citation, RAGAnswer, RetrievedChu
 from rag_project.rag_core.ports.embedding_port import EmbeddingProvider
 from rag_project.rag_core.ports.llm_port import LLMProvider
 from rag_project.rag_core.ports.repo_port import ChunkRepository
-from rag_project.config import DEFAULT_MIN_MATCH_SCORE, DEFAULT_SEARCH_LIMIT, RETRIEVAL_SYSTEM_PROMPT, ANSWER_DEFAULT_TOP_K
+from rag_project.config import (
+    DEFAULT_MIN_MATCH_SCORE,
+    DEFAULT_SEARCH_LIMIT,
+    RETRIEVAL_SYSTEM_PROMPT,
+    ANSWER_DEFAULT_TOP_K,
+)
 from rag_project.logger import get_logger
 
 
@@ -20,7 +25,13 @@ def vector_search(
     posted_after: float | None = None,
     doc_types: list[str] | None = None,
 ) -> List[RetrievedChunk]:
-    logger.debug("Vector search start: query_len=%d limit=%d min_score=%.2f doc_types=%s", len(query), limit, min_match_score, doc_types)
+    logger.debug(
+        "Vector search start: query_len=%d limit=%d min_score=%.2f doc_types=%s",
+        len(query),
+        limit,
+        min_match_score,
+        doc_types,
+    )
     q_emb = embedder.embed([query])[0]
     results = chunk_repo.search(
         q_emb,

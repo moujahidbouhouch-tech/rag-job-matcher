@@ -1,6 +1,13 @@
 """Model, embedding, ingestion, and retrieval configuration."""
 
-from .env_config import _env_first, DB_HOST, DB_PORT, DB_USER, DB_PASS, TEST_DB_NAME as ENV_TEST_DB_NAME
+from .env_config import (
+    _env_first,
+    DB_HOST,
+    DB_PORT,
+    DB_USER,
+    DB_PASS,
+    TEST_DB_NAME as ENV_TEST_DB_NAME,
+)
 
 # =============================================================================
 # Model configurations
@@ -239,7 +246,9 @@ DEFAULT_CHUNK_STRATEGY = "structured"
 
 # Debug logging (ingestion chunking)
 INGEST_DEBUG_LOG_CHUNKS = False
-INGEST_DEBUG_LOG_PATH = _env_first(["INGEST_DEBUG_LOG_PATH"], "logs/ingest_chunk_debug.log")
+INGEST_DEBUG_LOG_PATH = _env_first(
+    ["INGEST_DEBUG_LOG_PATH"], "logs/ingest_chunk_debug.log"
+)
 
 # Retrieval/search defaults
 DEFAULT_SEARCH_LIMIT = 5
@@ -285,7 +294,14 @@ REQUIRED_LLM_MODELS = {
     LLM_MODELS["llm_fallback"]["id"],
 }
 REQUIRED_EMBEDDING_MODELS = {LLM_MODELS["embedding"]["id"]}
-REQUIRED_TABLES = {"documents", "job_postings", "personal_documents", "company_info", "chunks", VECTOR_SETTINGS["table"]}
+REQUIRED_TABLES = {
+    "documents",
+    "job_postings",
+    "personal_documents",
+    "company_info",
+    "chunks",
+    VECTOR_SETTINGS["table"],
+}
 REQUIRED_EXTENSIONS = {"vector"}
 REQUIRED_INDEXES = {VECTOR_SETTINGS["index"]}
 REQUIRED_FKS = {

@@ -44,7 +44,9 @@ class FakeRetrieved:
         self.chunk = chunk
         self.document = doc
         self.score = score
-        self.job_posting = type("JP", (), {"title": title, "company": company})() if title else None
+        self.job_posting = (
+            type("JP", (), {"title": title, "company": company})() if title else None
+        )
         self.personal = None
         self.company_info = None
 
@@ -53,7 +55,15 @@ class FakeRepo:
     def __init__(self, retrieved):
         self.retrieved = retrieved
 
-    def search(self, query_embedding, limit=5, doc_types=None, min_match_score=0.0, posted_after=None, filters=None):
+    def search(
+        self,
+        query_embedding,
+        limit=5,
+        doc_types=None,
+        min_match_score=0.0,
+        posted_after=None,
+        filters=None,
+    ):
         return self.retrieved
 
     def insert_document(self, *args, **kwargs):
@@ -114,7 +124,15 @@ def test_analyze_extracts_domain_mappings_once():
 
 
 def test_analyze_uses_extracted_mappings_in_evaluations():
-    mappings = type("DM", (), {"language_mappings": ["x"], "skill_demonstrations": [], "credential_mappings": []})()
+    mappings = type(
+        "DM",
+        (),
+        {
+            "language_mappings": ["x"],
+            "skill_demonstrations": [],
+            "credential_mappings": [],
+        },
+    )()
     service = _make_service(domain_mappings=mappings)
     result = service.analyze_match("job")
     assert result.evaluations  # evaluations produced
@@ -124,6 +142,7 @@ def test_analyze_continues_when_domain_extraction_fails():
     class FailingExtractor:
         def extract_domain_mappings(self, job_text):
             raise RuntimeError("fail")
+
     service = _make_service(domain_mappings=None)
     service.domain_extractor = FailingExtractor()
     result = service.analyze_match("job")
@@ -132,7 +151,9 @@ def test_analyze_continues_when_domain_extraction_fails():
 
 def test_citations_respect_top_k():
     doc = FakeDoc()
-    retrieved = [FakeRetrieved(FakeChunk(doc.id), doc) for _ in range(CITATION_TOP_K + 2)]
+    retrieved = [
+        FakeRetrieved(FakeChunk(doc.id), doc) for _ in range(CITATION_TOP_K + 2)
+    ]
     service = _make_service(retrieved=retrieved)
     result = service.analyze_match("job")
     assert result.evaluations[0].citations is not None
@@ -155,11 +176,19 @@ def test_evaluation_prompt_includes_domain_mappings():
     from rag_project.rag_core.retrieval.domain_extraction_service import DomainMapping
 
     mappings = DomainMapping(
-        language_mappings=[{"source_term": "Masterarbeit", "equivalent_terms": ["Master's thesis"], "context": "academic"}],
+        language_mappings=[
+            {
+                "source_term": "Masterarbeit",
+                "equivalent_terms": ["Master's thesis"],
+                "context": "academic",
+            }
+        ],
         skill_demonstrations=[],
         credential_mappings=[],
     )
-    llm = FakeLLM(["{}", "✅ MATCH | ok"])  # first call unused in overridden _extract_requirements
+    llm = FakeLLM(
+        ["{}", "✅ MATCH | ok"]
+    )  # first call unused in overridden _extract_requirements
     repo = FakeRepo([FakeRetrieved(FakeChunk(FakeDoc().id), FakeDoc())])
     service = FakeJobMatchingService(
         embedder=FakeEmbedder(),

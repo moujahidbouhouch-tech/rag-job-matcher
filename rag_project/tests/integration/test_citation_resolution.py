@@ -8,8 +8,20 @@ def test_citation_marker_resolves_to_correct_chunk(qtbot):
     chat = ChatArea(app, parent=None)
 
     citations = [
-        {"label": 1, "content": "Evidence A", "doc_type": "cv", "doc_id": "d1", "chunk_id": "c1"},
-        {"label": 2, "content": "Evidence B", "doc_type": "cv", "doc_id": "d2", "chunk_id": "c2"},
+        {
+            "label": 1,
+            "content": "Evidence A",
+            "doc_type": "cv",
+            "doc_id": "d1",
+            "chunk_id": "c1",
+        },
+        {
+            "label": 2,
+            "content": "Evidence B",
+            "doc_type": "cv",
+            "doc_id": "d2",
+            "chunk_id": "c2",
+        },
     ]
 
     received = []

@@ -39,7 +39,12 @@ class RouterService:
         try:
             raw = self._llm.generate(prompt, max_tokens=256)
             decision = self._parse_response(raw)
-            logger.info("Router decision: action=%s confidence=%.2f needs_clarification=%s", decision.action, decision.confidence, decision.needs_clarification)
+            logger.info(
+                "Router decision: action=%s confidence=%.2f needs_clarification=%s",
+                decision.action,
+                decision.confidence,
+                decision.needs_clarification,
+            )
             return decision
         except Exception as exc:
             logger.error("Router failed, returning unknown: %s", exc, exc_info=True)
@@ -51,7 +56,11 @@ class RouterService:
 
     def _build_prompt(self, user_input: str, context: dict) -> str:
         selected_jobs = context.get("selected_jobs") or []
-        context_str = f"Selected jobs: {len(selected_jobs)}" if selected_jobs else "Selected jobs: 0"
+        context_str = (
+            f"Selected jobs: {len(selected_jobs)}"
+            if selected_jobs
+            else "Selected jobs: 0"
+        )
         history = context.get("history") or []
         history_lines = []
         for msg in history:
@@ -61,7 +70,10 @@ class RouterService:
         history_block = "\n".join(history_lines)
         if len(history_block) > ROUTER_HISTORY_CHAR_BUDGET:
             history_block = history_block[-ROUTER_HISTORY_CHAR_BUDGET:]
-        return ROUTER_SYSTEM_PROMPT.format(user_input=user_input, context=context_str + ("\n" + history_block if history_block else ""))
+        return ROUTER_SYSTEM_PROMPT.format(
+            user_input=user_input,
+            context=context_str + ("\n" + history_block if history_block else ""),
+        )
 
     def _parse_response(self, response: str) -> RouteDecision:
         try:

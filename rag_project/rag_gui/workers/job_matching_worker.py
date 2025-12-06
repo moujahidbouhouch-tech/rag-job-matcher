@@ -55,13 +55,17 @@ class JobMatchingWorker(QThread):
                 if self._is_cancelled:
                     logger.info("Job matching analysis cancelled during evaluation")
                     return
-                self.progress_update.emit(f"⚙️ Evaluating requirement {idx}/{len(requirements)}: {req.name}")
+                self.progress_update.emit(
+                    f"⚙️ Evaluating requirement {idx}/{len(requirements)}: {req.name}"
+                )
                 evaluation = self.job_matching_service._evaluate_requirement(req, domain_mappings)  # type: ignore[attr-defined]
                 evaluations.append(evaluation)
                 self.evaluation_ready.emit(req, evaluation)
 
             match_count = sum(
-                1 for e in evaluations if "MATCH" in e.verdict.upper() and "MISSING" not in e.verdict.upper()
+                1
+                for e in evaluations
+                if "MATCH" in e.verdict.upper() and "MISSING" not in e.verdict.upper()
             )
             missing_count = len(evaluations) - match_count
             match_rate = (match_count / len(evaluations) * 100) if evaluations else 0.0

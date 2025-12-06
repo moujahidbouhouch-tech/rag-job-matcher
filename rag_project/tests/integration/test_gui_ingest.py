@@ -9,18 +9,18 @@ from rag_project.rag_gui.workers.ingestion_worker import IngestionWorker
 class FakeIngestion:
     def __init__(self):
         self.called_with = None
-    
+
     def ingest_file(self, file_path: str, metadata=None, progress_cb=None):
         # 1. Simulate Error for "missing file" test
         if "missing" in str(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
         self.called_with = (file_path, metadata)
-        
+
         # 2. Simulate Success Callback so "ingestion completed" log appears
         if progress_cb:
-             progress_cb("done", {"message": "Ingestion completed"})
-        
+            progress_cb("done", {"message": "Ingestion completed"})
+
         return uuid.uuid4()
 
 
@@ -61,18 +61,21 @@ def test_ingest_worker_emits_progress_and_finishes(sample_files):
     worker.progress_detail.connect(lambda v: details.append(v))
     worker.log_message.connect(lambda msg: messages.append(msg))
     worker.error_occurred.connect(lambda msg: messages.append(f"error:{msg}"))
-    
+
     worker.run()
 
     assert app.ingestion.called_with[0] == str(dummy_file)
     assert any("ingestion completed" in m.lower() for m in messages)
+
 
 def test_ingest_worker_handles_missing_file(tmp_path):
     missing_file = tmp_path / "missing.json"
     app = FakeApp()
     from rag_project.config import DOC_TYPE_JOB_POSTING
 
-    worker = IngestionWorker(app, [str(missing_file)], {"doc_type": DOC_TYPE_JOB_POSTING})
+    worker = IngestionWorker(
+        app, [str(missing_file)], {"doc_type": DOC_TYPE_JOB_POSTING}
+    )
 
     errors = []
     worker.error_occurred.connect(errors.append)

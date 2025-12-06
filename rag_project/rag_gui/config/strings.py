@@ -22,8 +22,13 @@ GUI_PROGRESS_LABEL = "Progress"
 GUI_DETAIL_STATUS_DEFAULT = "Current step: Ready"
 GUI_DETAIL_STATUS_COLOR_DEFAULT = "color: gray;"
 GUI_LOG_HEADER_TEXT = "Process Log"
-GUI_FILE_DIALOG_FILTERS = "All Supported (*.pdf *.docx *.txt *.md);;PDF (*.pdf);;Word (*.docx);;Text (*.txt)"
-GUI_DOC_TYPE_WARNING_TEXT = {"title": "Missing Info", "message": "Please select a Document Type."}
+GUI_FILE_DIALOG_FILTERS = (
+    "All Supported (*.pdf *.docx *.txt *.md);;PDF (*.pdf);;Word (*.docx);;Text (*.txt)"
+)
+GUI_DOC_TYPE_WARNING_TEXT = {
+    "title": "Missing Info",
+    "message": "Please select a Document Type.",
+}
 GUI_START_LOG_TEMPLATE = "Starting ingestion (DB connected)... Type: {doc_type}"
 GUI_STOP_STATUS_TEXT = {"stopping": "Stopping...", "stopped": "Stopped"}
 GUI_ABORT_MESSAGE = "Ingestion stopped by user."
@@ -62,8 +67,14 @@ GUI_RAG_JOBLIST_LABEL = "Select job postings"
 GUI_CONTEXT_TOGGLE_LABEL = "Show/Hide Context"
 GUI_CHAT_PLACEHOLDER = "Ask a question about the selected job(s)..."
 GUI_SEND_BUTTON_LABEL = "Send"
-GUI_RAG_SELECTION_WARNINGS = {"title": "No Jobs Selected", "message": "Please select at least one job posting."}
-GUI_RAG_EMPTY_QUESTION_MESSAGE = {"title": "Empty Question", "message": "Please enter a question."}
+GUI_RAG_SELECTION_WARNINGS = {
+    "title": "No Jobs Selected",
+    "message": "Please select at least one job posting.",
+}
+GUI_RAG_EMPTY_QUESTION_MESSAGE = {
+    "title": "Empty Question",
+    "message": "Please enter a question.",
+}
 GUI_DBVIEW_TITLE = "Database Overview (current DB)"
 GUI_REFRESH_LABEL = "Refresh"
 GUI_DB_STATUS_CHECKING = "Checking database connection..."
@@ -71,8 +82,14 @@ GUI_DB_ERROR_PREFIX = "Error: "
 GUI_DELETE_TITLE = "Delete Documents"
 GUI_DELETE_LOAD_LABEL = "Load"
 GUI_DELETE_BUTTON_LABEL = "Delete Selected"
-GUI_DELETE_SELECTION_WARNING = {"title": "No Selection", "message": "Please select at least one document."}
-GUI_DELETE_CONFIRM_TEXT = {"title": "Confirm Delete", "template": "Delete {count} document(s)?"}
+GUI_DELETE_SELECTION_WARNING = {
+    "title": "No Selection",
+    "message": "Please select at least one document.",
+}
+GUI_DELETE_CONFIRM_TEXT = {
+    "title": "Confirm Delete",
+    "template": "Delete {count} document(s)?",
+}
 GUI_DELETE_FAIL_TITLE = "Deletion Failed"
 GUI_CHATAREA_PLACEHOLDER = "Type your message here..."
 GUI_CONTEXT_HEADER_TEXT = "Context"
@@ -95,7 +112,9 @@ GUI_JOB_LOAD_ERROR_PREFIX = "Error: "
 GUI_NO_CONTEXT_TEXT = "No specific context found."
 
 # Job Matching View Strings
-JOB_MATCHING_NO_JOB_SELECTED = "❌ Please select a job posting first to analyze your match."
+JOB_MATCHING_NO_JOB_SELECTED = (
+    "❌ Please select a job posting first to analyze your match."
+)
 JOB_MATCHING_LOAD_FAILED = "❌ Could not load job posting text."
 JOB_MATCHING_ANALYZING = "🤔 Analyzing your match against this job posting..."
 JOB_MATCHING_RESULT_HEADER = "## 📊 Match Analysis Results\n"

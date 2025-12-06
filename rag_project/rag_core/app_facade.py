@@ -6,7 +6,9 @@ from rag_project.rag_core.infra.embedding_bgem3 import BgeM3EmbeddingProvider
 from rag_project.rag_core.infra.llm_ollama import OllamaLLMProvider
 from rag_project.rag_core.retrieval.job_matching_service import JobMatchingService
 from rag_project.rag_core.retrieval.router_service import RouterService
-from rag_project.rag_core.retrieval.domain_extraction_service import DomainExtractionService
+from rag_project.rag_core.retrieval.domain_extraction_service import (
+    DomainExtractionService,
+)
 from rag_project.rag_core.ingestion.service import IngestionService
 from rag_project.rag_core.retrieval.service import QueryService
 from rag_project.logger import get_logger
@@ -32,7 +34,7 @@ class RAGApp:
             model=self.settings.ollama_model,
             fallback_model=self.settings.ollama_fallback_model,
             timeout=self.settings.ollama_timeout,
-            num_ctx=self.settings.ollama_num_ctx
+            num_ctx=self.settings.ollama_num_ctx,
         )
         self.ingestion = IngestionService(
             document_repo=self.repo,
@@ -54,7 +56,9 @@ class RAGApp:
             chunk_repo=self.repo,
         )
         self.router = RouterService(llm=self.llm)
-        self.domain_extractor = DomainExtractionService(self.llm, self.embedder, self.repo)
+        self.domain_extractor = DomainExtractionService(
+            self.llm, self.embedder, self.repo
+        )
         self.job_matching = JobMatchingService(
             embedder=self.embedder,
             llm=self.llm,
@@ -64,7 +68,11 @@ class RAGApp:
         logger.info("RAGApp initialized successfully")
 
     def _dsn(self) -> str:
-        password_part = f" password={self.settings.db_password}" if self.settings.db_password else ""
+        password_part = (
+            f" password={self.settings.db_password}"
+            if self.settings.db_password
+            else ""
+        )
         return (
             f"host={self.settings.db_host} "
             f"port={self.settings.db_port} "

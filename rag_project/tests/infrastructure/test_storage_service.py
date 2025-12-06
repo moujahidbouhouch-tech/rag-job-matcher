@@ -61,7 +61,13 @@ def test_storage_insert_and_fetch_roundtrip():
     jp = JobPosting(document_id=doc.id, title="Doc 1")
     repo.insert_document(doc)
     repo.insert_job_posting(jp)
-    chunk = Chunk(id=uuid4(), document_id=doc.id, chunk_index=0, content="hello world", token_count=2)
+    chunk = Chunk(
+        id=uuid4(),
+        document_id=doc.id,
+        chunk_index=0,
+        content="hello world",
+        token_count=2,
+    )
     repo.insert_chunks_with_embeddings([chunk], [_vector(0.1)])
 
     with psycopg.connect(_dsn(), connect_timeout=30) as conn, conn.cursor() as cur:
@@ -77,12 +83,17 @@ def test_storage_update_metadata_only():
     if not _db_available():
         pytest.skip("Database not reachable")
     repo = _repo()
-    doc = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"initial": True})
+    doc = Document(
+        id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"initial": True}
+    )
     repo.insert_document(doc)
 
     with psycopg.connect(_dsn(), connect_timeout=30) as conn, conn.cursor() as cur:
         register_vector(conn)
-        cur.execute("UPDATE documents SET metadata = %s WHERE id = %s", (Json({"updated": True}), doc.id))
+        cur.execute(
+            "UPDATE documents SET metadata = %s WHERE id = %s",
+            (Json({"updated": True}), doc.id),
+        )
         cur.execute("SELECT metadata FROM documents WHERE id = %s", (doc.id,))
         row = cur.fetchone()
     assert row and row[0]["updated"] is True
@@ -98,7 +109,9 @@ def test_storage_delete_job_removes_embeddings():
     jp = JobPosting(document_id=doc.id, title="To delete")
     repo.insert_document(doc)
     repo.insert_job_posting(jp)
-    chunk = Chunk(id=uuid4(), document_id=doc.id, chunk_index=0, content="bye", token_count=1)
+    chunk = Chunk(
+        id=uuid4(), document_id=doc.id, chunk_index=0, content="bye", token_count=1
+    )
     repo.insert_chunks_with_embeddings([chunk], [_vector(0.2)])
 
     repo.delete_document(doc.id)
@@ -127,7 +140,13 @@ def test_storage_handles_large_text_and_null_metadata():
     doc = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata=None)
     repo.insert_document(doc)
     large_content = "x" * 5000
-    chunk = Chunk(id=uuid4(), document_id=doc.id, chunk_index=0, content=large_content, token_count=len(large_content.split()))
+    chunk = Chunk(
+        id=uuid4(),
+        document_id=doc.id,
+        chunk_index=0,
+        content=large_content,
+        token_count=len(large_content.split()),
+    )
     repo.insert_chunks_with_embeddings([chunk], [_vector(0.05)])
 
     with psycopg.connect(_dsn(), connect_timeout=30) as conn, conn.cursor() as cur:
@@ -144,14 +163,26 @@ def test_storage_vector_search_returns_nearest_neighbor():
         pytest.skip("Database not reachable")
     _clear_tables()
     repo = _repo()
-    doc_a = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"title": "A"})
-    doc_b = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"title": "B"})
+    doc_a = Document(
+        id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"title": "A"}
+    )
+    doc_b = Document(
+        id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0], metadata={"title": "B"}
+    )
     repo.insert_document(doc_a)
     repo.insert_document(doc_b)
-    repo.insert_job_posting(JobPosting(document_id=doc_a.id, title="A", match_score=0.9))
-    repo.insert_job_posting(JobPosting(document_id=doc_b.id, title="B", match_score=0.1))
-    chunk_a = Chunk(id=uuid4(), document_id=doc_a.id, chunk_index=0, content="doc a", token_count=2)
-    chunk_b = Chunk(id=uuid4(), document_id=doc_b.id, chunk_index=0, content="doc b", token_count=2)
+    repo.insert_job_posting(
+        JobPosting(document_id=doc_a.id, title="A", match_score=0.9)
+    )
+    repo.insert_job_posting(
+        JobPosting(document_id=doc_b.id, title="B", match_score=0.1)
+    )
+    chunk_a = Chunk(
+        id=uuid4(), document_id=doc_a.id, chunk_index=0, content="doc a", token_count=2
+    )
+    chunk_b = Chunk(
+        id=uuid4(), document_id=doc_b.id, chunk_index=0, content="doc b", token_count=2
+    )
     repo.insert_chunks_with_embeddings([chunk_a, chunk_b], [_vector(0.9), _vector(0.1)])
 
     results = repo.search(query_embedding=_vector(0.9), limit=1)

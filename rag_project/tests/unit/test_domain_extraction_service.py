@@ -2,7 +2,9 @@ import json
 
 import pytest
 
-from rag_project.rag_core.retrieval.domain_extraction_service import DomainExtractionService
+from rag_project.rag_core.retrieval.domain_extraction_service import (
+    DomainExtractionService,
+)
 from rag_project.config import DOMAIN_MAPPING_MAX_TOKENS, DOMAIN_MAPPING_CANDIDATE_LIMIT
 
 
@@ -51,7 +53,14 @@ def test_extract_domain_mappings_returns_empty_on_malformed_json():
 
 def test_extract_domain_mappings_parses_code_fence():
     payload = {
-        "language_mappings": [{"source_term": "Masterarbeit", "equivalent_terms": ["Master's thesis"], "context": "academic", "confidence": 0.95}],
+        "language_mappings": [
+            {
+                "source_term": "Masterarbeit",
+                "equivalent_terms": ["Master's thesis"],
+                "context": "academic",
+                "confidence": 0.95,
+            }
+        ],
         "skill_demonstrations": [],
         "credential_mappings": [],
     }
@@ -60,7 +69,10 @@ def test_extract_domain_mappings_parses_code_fence():
 
     result = service.extract_domain_mappings("job")
 
-    assert result.language_mappings and result.language_mappings[0]["source_term"] == "Masterarbeit"
+    assert (
+        result.language_mappings
+        and result.language_mappings[0]["source_term"] == "Masterarbeit"
+    )
 
 
 def test_extract_respects_max_tokens_setting():

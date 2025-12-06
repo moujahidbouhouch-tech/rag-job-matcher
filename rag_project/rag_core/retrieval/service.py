@@ -31,7 +31,12 @@ class QueryService:
         posted_after: float | None = None,
         doc_types: list[str] | None = None,
     ) -> List[RetrievedChunk]:
-        logger.info("Search requested: limit=%d min_score=%.2f doc_types=%s", limit, min_match_score, doc_types)
+        logger.info(
+            "Search requested: limit=%d min_score=%.2f doc_types=%s",
+            limit,
+            min_match_score,
+            doc_types,
+        )
         return vector_search(
             question,
             self.embedder,
@@ -50,7 +55,12 @@ class QueryService:
         posted_after: float | None = None,
         doc_types: list[str] | None = None,
     ) -> RAGAnswer:
-        logger.info("Answer requested: limit=%d min_score=%.2f doc_types=%s", limit, min_match_score, doc_types)
+        logger.info(
+            "Answer requested: limit=%d min_score=%.2f doc_types=%s",
+            limit,
+            min_match_score,
+            doc_types,
+        )
         return answer_question(
             question,
             self.embedder,

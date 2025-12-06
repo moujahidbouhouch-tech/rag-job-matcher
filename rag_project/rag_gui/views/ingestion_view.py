@@ -58,13 +58,15 @@ class IngestionView(QtWidgets.QWidget):
         self._conn_checker = conn_checker
         self._current_files: list[str] = []
         self._worker: Optional[IngestionWorker] = None
-        
+
         self._build_ui()
         self.refresh_db_status()
 
     def _build_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        layout.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         layout.setSpacing(PADDING_MEDIUM)
 
         # --- 1. Header ---
@@ -82,8 +84,10 @@ class IngestionView(QtWidgets.QWidget):
         # --- 2. File Selection Area (Grouped) ---
         file_group = QtWidgets.QGroupBox(GUI_GROUP_SELECT_DOCS)
         file_layout = QtWidgets.QHBoxLayout(file_group)
-        file_layout.setContentsMargins(PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM)
-        
+        file_layout.setContentsMargins(
+            PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM
+        )
+
         self.selected_display = QtWidgets.QPlainTextEdit()
         self.selected_display.setReadOnly(True)
         self.selected_display.setPlaceholderText(GUI_NO_FILES_PLACEHOLDER)
@@ -98,7 +102,7 @@ class IngestionView(QtWidgets.QWidget):
         self.browse_btn.clicked.connect(self.browse_files)
         self.remove_btn = QtWidgets.QPushButton(GUI_FILE_BUTTON_LABELS["clear"])
         self.remove_btn.clicked.connect(self.remove_files)
-        
+
         self.browse_btn.setFixedWidth(BUTTON_MIN_WIDTH)
         self.browse_btn.setFixedHeight(INPUT_HEIGHT)
         self.remove_btn.setFixedWidth(BUTTON_MIN_WIDTH)
@@ -118,8 +122,10 @@ class IngestionView(QtWidgets.QWidget):
         type_layout = QtWidgets.QVBoxLayout()
         type_layout.setSpacing(2)
         type_label = QtWidgets.QLabel("2. Document Type")
-        type_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL, QtGui.QFont.DemiBold))
-        
+        type_label.setFont(
+            QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL, QtGui.QFont.DemiBold)
+        )
+
         self.doc_type_combo = QtWidgets.QComboBox()
         self.doc_type_combo.addItem(GUI_DOC_TYPE_PLACEHOLDER, None)
         self.doc_type_combo.addItems(DOC_TYPE_OPTIONS)
@@ -135,18 +141,20 @@ class IngestionView(QtWidgets.QWidget):
 
         ctrl_layout = QtWidgets.QVBoxLayout()
         ctrl_layout.setSpacing(PADDING_SMALL)
-        
+
         self.ingest_btn = QtWidgets.QPushButton(GUI_INGEST_BUTTON_LABELS["start"])
         self.ingest_btn.setFixedHeight(INPUT_HEIGHT + GUI_BUTTON_HEIGHT_OFFSET)
         self.ingest_btn.setFixedWidth(BUTTON_MIN_WIDTH)
         self.ingest_btn.clicked.connect(self.start_ingestion)
-        self.ingest_btn.setEnabled(False) 
-        
+        self.ingest_btn.setEnabled(False)
+
         self.stop_btn = QtWidgets.QPushButton(GUI_INGEST_BUTTON_LABELS["stop"])
         self.stop_btn.setFixedHeight(INPUT_HEIGHT + GUI_BUTTON_HEIGHT_OFFSET)
         self.stop_btn.setFixedWidth(BUTTON_MIN_WIDTH)
         # Apply explicit Red style for Danger feeling
-        self.stop_btn.setStyleSheet(GUI_STOP_BUTTON_STYLE.format(color=COLOR_LIGHT_DANGER))
+        self.stop_btn.setStyleSheet(
+            GUI_STOP_BUTTON_STYLE.format(color=COLOR_LIGHT_DANGER)
+        )
         self.stop_btn.clicked.connect(self.stop_ingestion)
         self.stop_btn.setVisible(False)
 
@@ -159,21 +167,23 @@ class IngestionView(QtWidgets.QWidget):
         # --- 4. Progress ---
         progress_col = QtWidgets.QVBoxLayout()
         progress_col.setSpacing(2)
-        
+
         self.progress_label = QtWidgets.QLabel(GUI_PROGRESS_LABEL)
         self.progress_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL))
-        
+
         self.overall_progress = QtWidgets.QProgressBar()
         self.overall_progress.setFixedHeight(INPUT_HEIGHT - GUI_PROGRESS_HEIGHT_OFFSET)
-        
+
         self.detail_label = QtWidgets.QLabel(GUI_DETAIL_STATUS_DEFAULT)
         self.detail_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL))
         # Initial gray state
         self.detail_label.setStyleSheet(GUI_DETAIL_STATUS_COLOR_DEFAULT)
-        
+
         self.detail_progress = QtWidgets.QProgressBar()
-        self.detail_progress.setFixedHeight(INPUT_HEIGHT - GUI_DETAIL_PROGRESS_HEIGHT_OFFSET)
-        
+        self.detail_progress.setFixedHeight(
+            INPUT_HEIGHT - GUI_DETAIL_PROGRESS_HEIGHT_OFFSET
+        )
+
         progress_col.addWidget(self.progress_label)
         progress_col.addWidget(self.overall_progress)
         progress_col.addWidget(self.detail_label)
@@ -184,20 +194,22 @@ class IngestionView(QtWidgets.QWidget):
         log_section = QtWidgets.QVBoxLayout()
         log_header_layout = QtWidgets.QHBoxLayout()
         log_header = QtWidgets.QLabel(GUI_LOG_HEADER_TEXT)
-        log_header.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LOG_HEADER, QtGui.QFont.DemiBold))
-        
+        log_header.setFont(
+            QtGui.QFont(FONT_FAMILY, FONT_SIZE_LOG_HEADER, QtGui.QFont.DemiBold)
+        )
+
         clear_logs_btn = QtWidgets.QPushButton("Clear")
         clear_logs_btn.setFixedSize(*GUI_CLEAR_BUTTON_SIZE)
         clear_logs_btn.clicked.connect(self.clear_logs)
-        
+
         log_header_layout.addWidget(log_header)
         log_header_layout.addStretch()
         log_header_layout.addWidget(clear_logs_btn)
-        
+
         self.log_text = QtWidgets.QTextEdit()
         self.log_text.setReadOnly(True)
         self.log_text.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_BODY))
-        
+
         log_section.addLayout(log_header_layout)
         log_section.addWidget(self.log_text, stretch=1)
         layout.addLayout(log_section)
@@ -209,14 +221,13 @@ class IngestionView(QtWidgets.QWidget):
 
     def validate_state(self):
         has_files = len(self._current_files) > 0
-        has_type = self.doc_type_combo.currentIndex() > 0 
+        has_type = self.doc_type_combo.currentIndex() > 0
         self.ingest_btn.setEnabled(has_files and has_type)
 
     def browse_files(self):
         logger.info("IngestionView browse_files invoked")
         paths, _ = QtWidgets.QFileDialog.getOpenFileNames(
-            self, "Select Documents", "", 
-            GUI_FILE_DIALOG_FILTERS
+            self, "Select Documents", "", GUI_FILE_DIALOG_FILTERS
         )
         if paths:
             self._current_files = paths
@@ -232,13 +243,19 @@ class IngestionView(QtWidgets.QWidget):
         self.validate_state()
 
     def start_ingestion(self):
-        logger.info("IngestionView start_ingestion clicked files=%d", len(self._current_files))
+        logger.info(
+            "IngestionView start_ingestion clicked files=%d", len(self._current_files)
+        )
         if self.doc_type_combo.currentIndex() <= 0:
-            QtWidgets.QMessageBox.warning(self, GUI_DOC_TYPE_WARNING_TEXT["title"], GUI_DOC_TYPE_WARNING_TEXT["message"])
+            QtWidgets.QMessageBox.warning(
+                self,
+                GUI_DOC_TYPE_WARNING_TEXT["title"],
+                GUI_DOC_TYPE_WARNING_TEXT["message"],
+            )
             return
 
         doc_type = self.doc_type_combo.currentText()
-        
+
         self.ingest_btn.setVisible(False)
         self.stop_btn.setVisible(True)
         self.browse_btn.setEnabled(False)
@@ -246,10 +263,10 @@ class IngestionView(QtWidgets.QWidget):
         self.doc_type_combo.setEnabled(False)
         self.overall_progress.setValue(0)
         self.detail_progress.setValue(0)
-        
+
         # Reset color to default (remove gray/red)
-        self.detail_label.setStyleSheet("") 
-        
+        self.detail_label.setStyleSheet("")
+
         self.add_log(GUI_START_LOG_TEMPLATE.format(doc_type=doc_type))
 
         self._worker = IngestionWorker(self._app, self._current_files, doc_type)
@@ -268,7 +285,9 @@ class IngestionView(QtWidgets.QWidget):
             logger.warning("IngestionView stop_ingestion requested")
             self.detail_label.setText(GUI_STOP_STATUS_TEXT["stopping"])
             # Immediate Visual Feedback: Red Text
-            self.detail_label.setStyleSheet(f"color: {COLOR_LIGHT_DANGER}; font-weight: bold;")
+            self.detail_label.setStyleSheet(
+                f"color: {COLOR_LIGHT_DANGER}; font-weight: bold;"
+            )
             self.stop_btn.setText(GUI_STOP_STATUS_TEXT["stopping"])
             self.stop_btn.setEnabled(False)
             self._worker.stop()
@@ -279,12 +298,12 @@ class IngestionView(QtWidgets.QWidget):
         self.ingest_btn.setEnabled(True)
         self.stop_btn.setVisible(False)
         self.stop_btn.setEnabled(True)
-        self.stop_btn.setText(GUI_INGEST_BUTTON_LABELS["stop"]) # Reset text
-        
+        self.stop_btn.setText(GUI_INGEST_BUTTON_LABELS["stop"])  # Reset text
+
         self.browse_btn.setEnabled(True)
         self.remove_btn.setEnabled(True)
         self.doc_type_combo.setEnabled(True)
-        
+
         # Reset status label style to default (removes red/gray)
         self.detail_label.setStyleSheet("")
 
@@ -299,16 +318,18 @@ class IngestionView(QtWidgets.QWidget):
 
     def add_log(self, message: str, error: bool = False):
         if error:
-            self.log_text.append(f"<span style='color:{COLOR_LIGHT_DANGER}'>{message}</span>")
+            self.log_text.append(
+                f"<span style='color:{COLOR_LIGHT_DANGER}'>{message}</span>"
+            )
         else:
             self.log_text.append(message)
-        
+
         cursor = self.log_text.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
         self.log_text.setTextCursor(cursor)
 
     def on_ingestion_complete(self, doc_id: str, chunk_count: int):
-        pass 
+        pass
 
     def on_ingestion_error(self, error_msg: str):
         self.add_log(f"Error: {error_msg}", error=True)
@@ -317,7 +338,9 @@ class IngestionView(QtWidgets.QWidget):
         self.add_log(GUI_ABORT_MESSAGE, error=True)
         self.detail_label.setText(GUI_STOP_STATUS_TEXT["stopped"])
         # Ensure red color persists until reset
-        self.detail_label.setStyleSheet(f"color: {COLOR_LIGHT_DANGER}; font-weight: bold;")
+        self.detail_label.setStyleSheet(
+            f"color: {COLOR_LIGHT_DANGER}; font-weight: bold;"
+        )
 
     def on_worker_finished(self):
         self.reset_ui_state()

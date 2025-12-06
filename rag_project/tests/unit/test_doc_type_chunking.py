@@ -22,7 +22,10 @@ from rag_project.config import (  # noqa: E402
 from rag_project.rag_core.domain.models import Chunk, Document  # noqa: E402
 from rag_project.rag_core.ingestion.service import IngestionService  # noqa: E402
 from rag_project.rag_core.ports.embedding_port import EmbeddingProvider  # noqa: E402
-from rag_project.rag_core.ports.repo_port import ChunkRepository, DocumentRepository  # noqa: E402
+from rag_project.rag_core.ports.repo_port import (
+    ChunkRepository,
+    DocumentRepository,
+)  # noqa: E402
 
 
 class FakeEmbedder(EmbeddingProvider):
@@ -61,7 +64,9 @@ class FakeChunkRepo(ChunkRepository):
         self.chunks: List[Chunk] = []
         self.embeddings: List[List[float]] = []
 
-    def insert_chunks_with_embeddings(self, chunks: List[Chunk], embeddings: List[List[float]]) -> None:
+    def insert_chunks_with_embeddings(
+        self, chunks: List[Chunk], embeddings: List[List[float]]
+    ) -> None:
         self.chunks.extend(chunks)
         self.embeddings.extend(embeddings)
 
@@ -73,7 +78,12 @@ class FakeLLM:
     def __init__(self):
         self.calls = []
 
-    def generate(self, prompt: str, model: str | None = None, max_tokens: int | None = LLM_PROVIDER_DEFAULT_MAX_TOKENS):
+    def generate(
+        self,
+        prompt: str,
+        model: str | None = None,
+        max_tokens: int | None = LLM_PROVIDER_DEFAULT_MAX_TOKENS,
+    ):
         self.calls.append({"prompt": prompt, "model": model, "max_tokens": max_tokens})
         if "split_after_lines" in prompt:
             return '{"split_after_lines": [2, 5]}'
@@ -105,7 +115,9 @@ def test_ingestion_cv_uses_llm_chunker():
         if "message" in info:
             messages.append(info["message"])
 
-    doc_id = service.ingest_file(str(cv_text_path), metadata={"doc_type": DOC_TYPE_CV}, progress_cb=progress_cb)
+    doc_id = service.ingest_file(
+        str(cv_text_path), metadata={"doc_type": DOC_TYPE_CV}, progress_cb=progress_cb
+    )
 
     # CV chunker should have been selected and LLM called with CV chunker model
     assert any("cv llm" in m for m in messages)
@@ -140,7 +152,11 @@ def test_ingestion_structured_for_thesis():
         if "message" in info:
             messages.append(info["message"])
 
-    doc_id = service.ingest_file(str(thesis_path), metadata={"doc_type": DOC_TYPE_THESIS}, progress_cb=progress_cb)
+    doc_id = service.ingest_file(
+        str(thesis_path),
+        metadata={"doc_type": DOC_TYPE_THESIS},
+        progress_cb=progress_cb,
+    )
 
     assert any("structured" in m for m in messages)
     assert service.chunk_repo.chunks, "No chunks stored"
@@ -172,7 +188,11 @@ def test_ingestion_structured_for_job_posting():
         if "message" in info:
             messages.append(info["message"])
 
-    doc_id = service.ingest_file(str(job_path), metadata={"doc_type": DOC_TYPE_JOB_POSTING}, progress_cb=progress_cb)
+    doc_id = service.ingest_file(
+        str(job_path),
+        metadata={"doc_type": DOC_TYPE_JOB_POSTING},
+        progress_cb=progress_cb,
+    )
 
     assert any("structured" in m for m in messages)
     assert service.chunk_repo.chunks, "No chunks stored"

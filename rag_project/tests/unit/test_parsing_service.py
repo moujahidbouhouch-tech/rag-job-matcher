@@ -26,7 +26,9 @@ class ParsedDocument:
     metadata: Dict[str, Any]
 
 
-def _install_fake_pdf_module(monkeypatch, return_value=None, exc: Exception | None = None):
+def _install_fake_pdf_module(
+    monkeypatch, return_value=None, exc: Exception | None = None
+):
     """Inject a fake pymupdf4llm module so parse_file can run without the real dependency."""
 
     class FakePdfModule:
@@ -52,7 +54,9 @@ def test_parsing_service_pdf_to_text_simple(tmp_path, monkeypatch):
 def test_parsing_service_pdf_multi_page(tmp_path, monkeypatch):
     pdf_path = tmp_path / "multi.pdf"
     pdf_path.write_bytes(b"%PDF-1.4\n%stub\n")
-    _install_fake_pdf_module(monkeypatch, return_value="Page 1 content\n\nPage 2 content")
+    _install_fake_pdf_module(
+        monkeypatch, return_value="Page 1 content\n\nPage 2 content"
+    )
 
     text = parse_file(pdf_path)
 
@@ -70,7 +74,10 @@ def test_parsing_service_pdf_corrupted_raises(tmp_path, monkeypatch):
 
 def test_parsing_service_markdown_to_text(tmp_path):
     md_path = tmp_path / "doc.md"
-    md_path.write_text("# Heading\n\n- item 1\n- item 2\n\n[link](http://example.com)", encoding="utf-8")
+    md_path.write_text(
+        "# Heading\n\n- item 1\n- item 2\n\n[link](http://example.com)",
+        encoding="utf-8",
+    )
 
     text = parse_file(md_path)
 
@@ -90,7 +97,11 @@ def test_parsing_service_json_job_normalized(tmp_path):
     json_path.write_text(json.dumps(job), encoding="utf-8")
 
     loaded = json.loads(json_path.read_text(encoding="utf-8"))
-    normalized = parse_job(loaded.get("title"), loaded.get("description"), metadata={"company": loaded["company"], "location": loaded["location"]})
+    normalized = parse_job(
+        loaded.get("title"),
+        loaded.get("description"),
+        metadata={"company": loaded["company"], "location": loaded["location"]},
+    )
 
     assert "Data Scientist" in normalized
     assert "Analyze data" in normalized
@@ -120,7 +131,9 @@ def test_parsing_service_integration_file_to_document(tmp_path, monkeypatch):
     pdf_path.write_bytes(b"%PDF-1.4\n%stub\n")
     _install_fake_pdf_module(monkeypatch, return_value="PDF text block")
     md_path.write_text("## Doc Title\nContent body", encoding="utf-8")
-    json_path.write_text(json.dumps({"title": "T", "description": "Body"}), encoding="utf-8")
+    json_path.write_text(
+        json.dumps({"title": "T", "description": "Body"}), encoding="utf-8"
+    )
 
     pdf_doc = ParsedDocument(parse_file(pdf_path), {"type": "pdf"})
     md_doc = ParsedDocument(parse_file(md_path), {"type": "md"})

@@ -39,9 +39,13 @@ class QwenLLMProvider(LLMProvider):
             timeout=self.timeout,
             headers={"Authorization": f"Bearer {self.api_key}"},
         )
-        logger.info("Qwen client initialized base_url=%s model=%s", self.base_url, self.model)
+        logger.info(
+            "Qwen client initialized base_url=%s model=%s", self.base_url, self.model
+        )
 
-    def generate(self, prompt: str, model: Optional[str] = None, max_tokens: int = 256) -> str:
+    def generate(
+        self, prompt: str, model: Optional[str] = None, max_tokens: int = 256
+    ) -> str:
         target_model = model or self.model
         payload = {
             "model": target_model,
@@ -49,10 +53,14 @@ class QwenLLMProvider(LLMProvider):
             "parameters": {"max_tokens": max_tokens},
         }
         try:
-            resp = self.client.post("/api/v1/services/aigc/text-generation/generation", json=payload)
+            resp = self.client.post(
+                "/api/v1/services/aigc/text-generation/generation", json=payload
+            )
             resp.raise_for_status()
             data = resp.json()
-            logger.debug("Qwen response ok model=%s tokens=%d", target_model, max_tokens)
+            logger.debug(
+                "Qwen response ok model=%s tokens=%d", target_model, max_tokens
+            )
             # Try multiple common response shapes
             if "output" in data and "text" in data["output"]:
                 return data["output"]["text"]

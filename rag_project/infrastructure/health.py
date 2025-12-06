@@ -107,13 +107,17 @@ def check_db() -> None:
     logger.info("Healthcheck: checking database connectivity")
     settings = db_settings()
     redacted = {**settings, "password": "***"}
-    with psycopg.connect(connect_timeout=DB_CONNECT_TIMEOUT_SECONDS, **settings) as conn:
+    with psycopg.connect(
+        connect_timeout=DB_CONNECT_TIMEOUT_SECONDS, **settings
+    ) as conn:
         register_vector(conn)
         with conn.cursor() as cur:
             cur.execute(HEALTHCHECK_DB_PING_QUERY)
             result = cur.fetchone()
             if result != (1,):
-                raise RuntimeError(f"Database connectivity check failed using settings {redacted}")
+                raise RuntimeError(
+                    f"Database connectivity check failed using settings {redacted}"
+                )
     logger.info("Healthcheck: database reachable")
 
 
@@ -121,7 +125,9 @@ def check_pgvector() -> None:
     """Ensure pgvector schema pieces (extensions, tables, indexes, constraints, columns) are present."""
     logger.info("Healthcheck: verifying pgvector schema elements")
     settings = db_settings()
-    with psycopg.connect(connect_timeout=DB_CONNECT_TIMEOUT_SECONDS, **settings) as conn:
+    with psycopg.connect(
+        connect_timeout=DB_CONNECT_TIMEOUT_SECONDS, **settings
+    ) as conn:
         register_vector(conn)
         with conn.cursor() as cur:
             cur.execute(HEALTHCHECK_EXT_QUERY, (list(REQUIRED_EXTENSIONS),))
@@ -171,7 +177,9 @@ def check_ollama() -> None:
     """Ensure Ollama is reachable and required LLM models are present."""
     logger.info("Healthcheck: checking Ollama availability")
     base_url = ollama_base_url()
-    resp = httpx.get(f"{base_url}{OLLAMA_HEALTHCHECK_PATH}", timeout=OLLAMA_HEALTH_TIMEOUT_SECONDS)
+    resp = httpx.get(
+        f"{base_url}{OLLAMA_HEALTHCHECK_PATH}", timeout=OLLAMA_HEALTH_TIMEOUT_SECONDS
+    )
     resp.raise_for_status()
     data = resp.json()
     names = {model.get("name") for model in data.get("models", []) if model.get("name")}
@@ -187,5 +195,7 @@ def check_models() -> None:
     cache_dirs = embedding_cache_dirs()
     missing = {mid for mid, path in cache_dirs.items() if not path.exists()}
     if missing:
-        raise RuntimeError(f"Missing embedding model cache directories: {sorted(missing)}")
+        raise RuntimeError(
+            f"Missing embedding model cache directories: {sorted(missing)}"
+        )
     logger.info("Healthcheck: embedding model cache present")

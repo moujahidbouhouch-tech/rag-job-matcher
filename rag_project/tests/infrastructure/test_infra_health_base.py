@@ -10,7 +10,12 @@ os.environ.setdefault("TEST_DB_NAME", "rag_test_db")
 os.environ.setdefault("TEST_DB_USER", "rag")
 os.environ.setdefault("TEST_DB_PASSWORD", "")
 
-from rag_project.infrastructure.health import check_db, check_models, check_ollama, check_pgvector
+from rag_project.infrastructure.health import (
+    check_db,
+    check_models,
+    check_ollama,
+    check_pgvector,
+)
 
 
 def test_database_connectivity():
@@ -25,7 +30,12 @@ def test_database_connectivity():
             pytest.skip("Sockets cannot be created in this environment.")
         try:
             s.settimeout(1)
-            s.connect((os.environ["DB_POSTGRESDB_HOST"], int(os.environ["DB_POSTGRESDB_PORT"])))
+            s.connect(
+                (
+                    os.environ["DB_POSTGRESDB_HOST"],
+                    int(os.environ["DB_POSTGRESDB_PORT"]),
+                )
+            )
         except PermissionError:
             pytest.skip("Socket connections are blocked in this environment.")
         finally:

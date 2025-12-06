@@ -6,7 +6,13 @@ from pathlib import Path
 from typing import Callable, List, Optional
 from uuid import UUID
 
-from rag_project.rag_core.domain.models import Chunk, Document, JobPosting, PersonalDocument, CompanyInfo
+from rag_project.rag_core.domain.models import (
+    Chunk,
+    Document,
+    JobPosting,
+    PersonalDocument,
+    CompanyInfo,
+)
 from rag_project.rag_core.ingestion.chunker import chunk_text
 from rag_project.rag_core.ingestion.structured_chunker import (
     ChunkConfig,
@@ -116,20 +122,22 @@ class IngestionService:
             return {}
 
         # Limit context to first ~1000 words (header info usually at top)
-        snippet = text[:METADATA_SNIPPET_CHARS] 
-        
+        snippet = text[:METADATA_SNIPPET_CHARS]
+
         prompt = METADATA_EXTRACTION_PROMPT.format(text=snippet)
-        
+
         try:
             # We use the primary LLM for this intelligence task
             # Assuming llm_provider has a generate method
             response = self.llm_provider.generate(prompt)
             cleaned_json = self._clean_json(response)
             data = json.loads(cleaned_json)
-            
+
             # Filter out nulls so we don't overwrite existing non-null metadata
             # Also filter empty strings or "None" strings if the LLM hallucinates them
-            return {k: v for k, v in data.items() if v not in [None, "null", "None", ""]}
+            return {
+                k: v for k, v in data.items() if v not in [None, "null", "None", ""]
+            }
         except Exception as e:
             logger.warning(f"Metadata extraction failed: {e}")
             return {}
@@ -142,15 +150,15 @@ class IngestionService:
         progress_cb: Optional[Callable[[str, dict], None]] = None,
     ) -> UUID:
         text = parse_job(title, body, metadata)
-        
+
         # For jobs, we might want extraction too if metadata is sparse
         self._emit(progress_cb, "extracting", {"message": MSG_METADATA_EXTRACTION})
         extracted_meta = self._extract_metadata_with_llm(text)
-        
+
         final_metadata = extracted_meta.copy()
         if metadata:
             final_metadata.update(metadata)
-            
+
         return self._ingest_text(text, final_metadata, progress_cb)
 
     def ingest_file(
@@ -161,11 +169,11 @@ class IngestionService:
     ) -> UUID:
         # 1. Parse
         text = parse_file(Path(file_path))
-        
+
         # 2. LLM Extraction (The New Step)
         self._emit(progress_cb, "extracting", {"message": MSG_METADATA_EXTRACTION})
         extracted_meta = self._extract_metadata_with_llm(text)
-        
+
         logger.info(f"LLM Extracted Metadata: {extracted_meta}")
 
         # 3. Merge Metadata (User input overrides LLM)
@@ -176,16 +184,25 @@ class IngestionService:
         # 4. Ingest as normal
         return self._ingest_text(text, final_metadata, progress_cb)
 
-    def _emit(self, progress_cb: Optional[Callable[[str, dict], None]], stage: str, info: dict):
+    def _emit(
+        self, progress_cb: Optional[Callable[[str, dict], None]], stage: str, info: dict
+    ):
         if progress_cb:
             progress_cb(stage, info)
 
-    def _ingest_text(self, text: str, metadata: Optional[dict], progress_cb: Optional[Callable[[str, dict], None]]) -> UUID:
+    def _ingest_text(
+        self,
+        text: str,
+        metadata: Optional[dict],
+        progress_cb: Optional[Callable[[str, dict], None]],
+    ) -> UUID:
         t0 = time.time()
         word_count = len(text.split())
         doc_type = metadata.get("doc_type") if metadata else DEFAULT_DOC_TYPE
         if doc_type not in SUPPORTED_DOC_TYPES:
-            raise ValueError(f"Unsupported doc_type '{doc_type}'. Supported: {SUPPORTED_DOC_TYPES}")
+            raise ValueError(
+                f"Unsupported doc_type '{doc_type}'. Supported: {SUPPORTED_DOC_TYPES}"
+            )
         self._emit(
             progress_cb,
             "start",
@@ -201,10 +218,20 @@ class IngestionService:
         if doc_type == DOC_TYPE_JOB_POSTING:
             jp = JobPosting(
                 document_id=document.id,
-                related_company_id=metadata.get("related_company_id") if metadata else None,
+                related_company_id=(
+                    metadata.get("related_company_id") if metadata else None
+                ),
                 title=metadata.get("title") if metadata else None,
-                location_text=metadata.get("location") or metadata.get("location_text") if metadata else None, # Check both keys
-                salary_range=metadata.get("salary") or metadata.get("salary_range") if metadata else None,
+                location_text=(
+                    metadata.get("location") or metadata.get("location_text")
+                    if metadata
+                    else None
+                ),  # Check both keys
+                salary_range=(
+                    metadata.get("salary") or metadata.get("salary_range")
+                    if metadata
+                    else None
+                ),
                 url=metadata.get("url") if metadata else None,
                 language=metadata.get("language") if metadata else None,
                 posted_at=metadata.get("posted_at") if metadata else None,
@@ -223,12 +250,20 @@ class IngestionService:
         elif doc_type == DOC_TYPE_COMPANY:
             ci = CompanyInfo(
                 document_id=document.id,
-                name=metadata.get("company") or metadata.get("name") if metadata else None,
+                name=(
+                    metadata.get("company") or metadata.get("name")
+                    if metadata
+                    else None
+                ),
                 industry=metadata.get("industry") if metadata else None,
             )
             self.document_repo.insert_company_info(ci)
-        chunk_strategy = CHUNK_STRATEGY.get(doc_type, CHUNK_STRATEGY.get("default", DEFAULT_CHUNK_STRATEGY))
-        text_for_chunk = text if doc_type == DOC_TYPE_CV else _dedup_lines(_clean_segment_text(text))
+        chunk_strategy = CHUNK_STRATEGY.get(
+            doc_type, CHUNK_STRATEGY.get("default", DEFAULT_CHUNK_STRATEGY)
+        )
+        text_for_chunk = (
+            text if doc_type == DOC_TYPE_CV else _dedup_lines(_clean_segment_text(text))
+        )
 
         if chunk_strategy == "llm_cv_chunker":
             if self.llm_provider is None:
@@ -240,19 +275,38 @@ class IngestionService:
             )
 
             def llm_call(prompt: str, max_tokens: int = CV_CHUNKER_MAX_OUTPUT_TOKENS):
-                return self.llm_provider.generate(prompt, model=CV_CHUNKER_MODEL_ID, max_tokens=max_tokens)
+                return self.llm_provider.generate(
+                    prompt, model=CV_CHUNKER_MODEL_ID, max_tokens=max_tokens
+                )
 
-            chunks_text, cv_debug = chunk_cv(text_for_chunk, llm_generate=llm_call, debug=INGEST_DEBUG_LOG_CHUNKS)
+            chunks_text, cv_debug = chunk_cv(
+                text_for_chunk, llm_generate=llm_call, debug=INGEST_DEBUG_LOG_CHUNKS
+            )
 
             if INGEST_DEBUG_LOG_CHUNKS:
                 try:
                     os.makedirs(os.path.dirname(INGEST_DEBUG_LOG_PATH), exist_ok=True)
                     with open(INGEST_DEBUG_LOG_PATH, "a", encoding="utf-8") as dbg:
                         dbg.write("\n")
-                        dbg.write(CV_CHUNK_DEBUG_FORMATS["header"].format(doc_id=document.id))
-                        dbg.write(CV_CHUNK_DEBUG_FORMATS["split_points"].format(split_points=cv_debug.get("split_points")))
-                        dbg.write(CV_CHUNK_DEBUG_FORMATS["num_chunks"].format(num_chunks=cv_debug.get("num_chunks"), num_lines=cv_debug.get("num_lines")))
-                        dbg.write(CV_CHUNK_DEBUG_FORMATS["prompt_truncated"].format(prompt_truncated=cv_debug.get("prompt_truncated")))
+                        dbg.write(
+                            CV_CHUNK_DEBUG_FORMATS["header"].format(doc_id=document.id)
+                        )
+                        dbg.write(
+                            CV_CHUNK_DEBUG_FORMATS["split_points"].format(
+                                split_points=cv_debug.get("split_points")
+                            )
+                        )
+                        dbg.write(
+                            CV_CHUNK_DEBUG_FORMATS["num_chunks"].format(
+                                num_chunks=cv_debug.get("num_chunks"),
+                                num_lines=cv_debug.get("num_lines"),
+                            )
+                        )
+                        dbg.write(
+                            CV_CHUNK_DEBUG_FORMATS["prompt_truncated"].format(
+                                prompt_truncated=cv_debug.get("prompt_truncated")
+                            )
+                        )
                         dbg.write(CV_CHUNK_DEBUG_FORMATS["prompt_label"])
                         dbg.write(cv_debug.get("prompt", "") + "\n---\n")
                         dbg.write(CV_CHUNK_DEBUG_FORMATS["response_label"])
@@ -260,16 +314,25 @@ class IngestionService:
                 except Exception as log_exc:  # noqa: BLE001
                     logger.warning("Failed to write CV chunk debug log: %s", log_exc)
         else:
-            profile = self.chunk_profiles.get(doc_type, self.chunk_profiles.get("default", {}))
+            profile = self.chunk_profiles.get(
+                doc_type, self.chunk_profiles.get("default", {})
+            )
             target_words = profile.get("target_words", self.max_tokens)
             overlap_words = profile.get("overlap_words", self.overlap_tokens)
-            proximity_weight = profile.get("proximity_weight", STRUCTURED_DEFAULT_PROXIMITY_WEIGHT)
+            proximity_weight = profile.get(
+                "proximity_weight", STRUCTURED_DEFAULT_PROXIMITY_WEIGHT
+            )
             use_llm_flag = profile.get("use_llm", self.structured_use_llm)
-            max_llm_input = profile.get("max_llm_input_words", self.structured_max_llm_input_words)
+            max_llm_input = profile.get(
+                "max_llm_input_words", self.structured_max_llm_input_words
+            )
             cfg = ChunkConfig(
                 max_chunk_words=target_words,
                 overlap_words=overlap_words,
-                min_chunk_words=max(self.structured_min_chunk_words, int(target_words * STRUCTURED_MIN_CHUNK_RATIO)),
+                min_chunk_words=max(
+                    self.structured_min_chunk_words,
+                    int(target_words * STRUCTURED_MIN_CHUNK_RATIO),
+                ),
                 max_chunk_words_hard=int(target_words * STRUCTURED_MAX_CHUNK_RATIO),
                 use_llm=use_llm_flag,
                 max_llm_input_words=max_llm_input,
@@ -310,7 +373,9 @@ class IngestionService:
                 "detail_pct": PROGRESS_CHUNK_DETAIL_PCT,
             },
         )
-        logger.info("Chunking complete: %s chunks (doc_type=%s)", len(chunks_text), doc_type)
+        logger.info(
+            "Chunking complete: %s chunks (doc_type=%s)", len(chunks_text), doc_type
+        )
         chunks: List[Chunk] = []
         for idx, ctext in enumerate(chunks_text):
             chunks.append(
@@ -363,7 +428,11 @@ class IngestionService:
         self._emit(
             progress_cb,
             "store",
-            {"message": MSG_WRITE_STAGE, "stage_pct": PROGRESS_STORE_STAGE_PCT, "detail_pct": PROGRESS_STORE_DETAIL_PCT},
+            {
+                "message": MSG_WRITE_STAGE,
+                "stage_pct": PROGRESS_STORE_STAGE_PCT,
+                "detail_pct": PROGRESS_STORE_DETAIL_PCT,
+            },
         )
         self.chunk_repo.insert_chunks_with_embeddings(chunks, embeddings)
         total_time = time.time() - t0
@@ -371,7 +440,9 @@ class IngestionService:
             progress_cb,
             "done",
             {
-                "message": MSG_INGESTION_DONE.format(time=total_time, count=len(chunks)),
+                "message": MSG_INGESTION_DONE.format(
+                    time=total_time, count=len(chunks)
+                ),
                 "stage_pct": PROGRESS_DONE_STAGE_PCT,
                 "detail_pct": PROGRESS_DONE_DETAIL_PCT,
             },

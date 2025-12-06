@@ -12,6 +12,7 @@ from rag_project.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 def split_into_sentences(text: str) -> List[str]:
     """Basic sentence splitter that avoids cutting decimals."""
     # Split on ., ?, ! followed by space/newline and uppercase/start; negative lookbehind for digit.
@@ -53,7 +54,11 @@ def chunk_text(
             # start new chunk; include overlap from previous chunk
             if chunks and overlap_tokens > 0:
                 last_words = chunks[-1].split()
-                overlap_slice = last_words[-overlap_tokens:] if len(last_words) > overlap_tokens else last_words
+                overlap_slice = (
+                    last_words[-overlap_tokens:]
+                    if len(last_words) > overlap_tokens
+                    else last_words
+                )
                 current = [" ".join(overlap_slice), sent]
                 current_len = len(overlap_slice) + sent_len
             else:
@@ -63,5 +68,10 @@ def chunk_text(
     if current:
         chunks.append(" ".join(current))
 
-    logger.debug("Chunked text into %d chunks (max_tokens=%d overlap_tokens=%d)", len(chunks), max_tokens, overlap_tokens)
+    logger.debug(
+        "Chunked text into %d chunks (max_tokens=%d overlap_tokens=%d)",
+        len(chunks),
+        max_tokens,
+        overlap_tokens,
+    )
     return chunks

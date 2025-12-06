@@ -11,13 +11,17 @@ from rag_project.rag_gui.config import (
     GUI_SEND_BUTTON_LABEL,
 )
 from rag_project.rag_gui.widgets.rag.chat_bubble import ChatBubble
-from rag_project.config import ROUTER_HISTORY_MAX_MESSAGES, ROUTER_HISTORY_PER_MESSAGE_TRUNCATE
+from rag_project.config import (
+    ROUTER_HISTORY_MAX_MESSAGES,
+    ROUTER_HISTORY_PER_MESSAGE_TRUNCATE,
+)
+
 
 class ChatArea(QtWidgets.QWidget):
     """Container for Chat History + Input + Send Logic."""
-    
+
     # Signal to tell the parent (RAGView) to open the context panel with specific sources
-    context_requested = QtCore.pyqtSignal(list) 
+    context_requested = QtCore.pyqtSignal(list)
 
     def __init__(self, app, parent=None):
         super().__init__(parent)
@@ -36,43 +40,50 @@ class ChatArea(QtWidgets.QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        
+
         self.history_container = QtWidgets.QWidget()
         self.history_layout = QtWidgets.QVBoxLayout(self.history_container)
-        self.history_layout.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        self.history_layout.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         self.history_layout.setSpacing(PADDING_MEDIUM)
-        self.history_layout.addStretch() # Pushes messages to bottom
-        
+        self.history_layout.addStretch()  # Pushes messages to bottom
+
         self.scroll_area.setWidget(self.history_container)
         layout.addWidget(self.scroll_area, stretch=1)
 
         # 2. Input Area Container
         input_container = QtWidgets.QFrame()
-        input_container.setObjectName("ContentPanel") # Use the panel border style
+        input_container.setObjectName("ContentPanel")  # Use the panel border style
         # Add a top border manually if theme doesn't handle it perfectly, or rely on container
         input_layout = QtWidgets.QHBoxLayout(input_container)
-        input_layout.setContentsMargins(PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM)
-        
+        input_layout.setContentsMargins(
+            PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM
+        )
+
         self.input_box = QtWidgets.QTextEdit()
         self.input_box.setPlaceholderText(GUI_CHAT_PLACEHOLDER)
         self.input_box.setFixedHeight(CHAT_INPUT_HEIGHT)
         self.input_box.setObjectName("ChatInput")
-        self.input_box.installEventFilter(self) # Catch Enter key
-        
+        self.input_box.installEventFilter(self)  # Catch Enter key
+
         self.send_btn = QtWidgets.QPushButton(GUI_SEND_BUTTON_LABEL)
         self.send_btn.setFixedHeight(CHAT_INPUT_HEIGHT)
         self.send_btn.setFixedWidth(BUTTON_MIN_WIDTH)
         self.send_btn.clicked.connect(self.send_message)
-        
+
         input_layout.addWidget(self.input_box)
         input_layout.addWidget(self.send_btn)
-        
+
         layout.addWidget(input_container)
 
     def eventFilter(self, obj, event):
         """Handle Enter key to send, Shift+Enter for newline."""
         if obj is self.input_box and event.type() == QtCore.QEvent.KeyPress:
-            if event.key() == QtCore.Qt.Key_Return and not event.modifiers() & QtCore.Qt.ShiftModifier:
+            if (
+                event.key() == QtCore.Qt.Key_Return
+                and not event.modifiers() & QtCore.Qt.ShiftModifier
+            ):
                 self.send_message()
                 return True
         return super().eventFilter(obj, event)
@@ -82,17 +93,19 @@ class ChatArea(QtWidgets.QWidget):
         if not is_user:
             # Connect the AI bubble's citation click
             bubble.citation_clicked.connect(self._on_citation_clicked)
-            
+
         self.history_layout.addWidget(bubble)
-        
+
         # Scroll to bottom
         QtCore.QTimer.singleShot(10, self._scroll_to_bottom)
         if store:
             role = "user" if is_user else "assistant"
-            self._history.append({"role": role, "content": text[:ROUTER_HISTORY_PER_MESSAGE_TRUNCATE]})
+            self._history.append(
+                {"role": role, "content": text[:ROUTER_HISTORY_PER_MESSAGE_TRUNCATE]}
+            )
             # keep bounded history
             if len(self._history) > self._history_max_messages:
-                self._history = self._history[-self._history_max_messages:]
+                self._history = self._history[-self._history_max_messages :]
         return bubble
 
     def _scroll_to_bottom(self):
@@ -105,7 +118,7 @@ class ChatArea(QtWidgets.QWidget):
             return
 
         # 1. UI Update
-        self.add_message(text, True) # Add user bubble
+        self.add_message(text, True)  # Add user bubble
         thinking_bubble = self.add_message("Thinking...", False, store=False)
         self.input_box.clear()
         self.set_input_enabled(False)

@@ -34,7 +34,10 @@ from rag_project.rag_core.domain.models import (
 from rag_project.rag_core.ports.embedding_port import EmbeddingProvider
 from rag_project.rag_core.ports.llm_port import LLMProvider
 from rag_project.rag_core.ports.repo_port import ChunkRepository
-from rag_project.rag_core.retrieval.domain_extraction_service import DomainExtractionService, DomainMapping
+from rag_project.rag_core.retrieval.domain_extraction_service import (
+    DomainExtractionService,
+    DomainMapping,
+)
 
 logger = get_logger(__name__)
 
@@ -68,7 +71,9 @@ class JobMatchingService:
 
     def analyze_match(self, job_text: str) -> JobMatchResult:
         """Analyze candidate match against a job posting."""
-        logger.info("Job matching: starting extraction (model=%s)", self.extraction_model)
+        logger.info(
+            "Job matching: starting extraction (model=%s)", self.extraction_model
+        )
 
         domain_mappings = self.extract_domain_knowledge(job_text)
         requirements = self._extract_requirements(job_text)
@@ -86,11 +91,15 @@ class JobMatchingService:
 
         evaluations = []
         for idx, req in enumerate(requirements, 1):
-            logger.debug("Job matching: evaluating %s (%d/%d)", req.name, idx, len(requirements))
+            logger.debug(
+                "Job matching: evaluating %s (%d/%d)", req.name, idx, len(requirements)
+            )
             evaluations.append(self._evaluate_requirement(req, domain_mappings))
 
         match_count = sum(
-            1 for e in evaluations if "MATCH" in e.verdict.upper() and "MISSING" not in e.verdict.upper()
+            1
+            for e in evaluations
+            if "MATCH" in e.verdict.upper() and "MISSING" not in e.verdict.upper()
         )
         missing_count = len(evaluations) - match_count
         match_rate = (match_count / len(evaluations) * 100) if evaluations else 0.0
@@ -137,7 +146,9 @@ class JobMatchingService:
             logger.error("Job matching: extraction failed: %s", exc, exc_info=True)
             return []
 
-    def _evaluate_requirement(self, req: JobRequirement, domain_mappings: DomainMapping | None = None) -> RequirementEvaluation:
+    def _evaluate_requirement(
+        self, req: JobRequirement, domain_mappings: DomainMapping | None = None
+    ) -> RequirementEvaluation:
         """Search evidence and evaluate a single requirement."""
         query_embedding = self.embedder.embed_query(req.search_query)
         chunks = self.chunk_repo.search(
@@ -160,9 +171,13 @@ class JobMatchingService:
                 citations=[],
             )
 
-        inference_rule = req.inference_rule or INFERENCE_RULES.get(req.category, "Apply strict keyword matching")
+        inference_rule = req.inference_rule or INFERENCE_RULES.get(
+            req.category, "Apply strict keyword matching"
+        )
 
-        language_mappings, skill_demonstrations, credential_mappings = self._format_domain_mappings(domain_mappings)
+        language_mappings, skill_demonstrations, credential_mappings = (
+            self._format_domain_mappings(domain_mappings)
+        )
 
         prompt = JOB_MATCHING_EVALUATION_PROMPT.format(
             domain_mappings=DOMAIN_MAPPINGS,
@@ -185,7 +200,9 @@ class JobMatchingService:
             parts = verdict_line.split("|", 1)
             status = parts[0].strip() if parts else "UNKNOWN"
             reasoning_raw = parts[1].strip() if len(parts) > 1 else verdict_line
-            reasoning = reasoning_raw.splitlines()[0] if reasoning_raw else reasoning_raw
+            reasoning = (
+                reasoning_raw.splitlines()[0] if reasoning_raw else reasoning_raw
+            )
 
             citations = self._build_citations(chunks)
             return RequirementEvaluation(
@@ -213,7 +230,9 @@ class JobMatchingService:
         try:
             return self.domain_extractor.extract_domain_mappings(job_text)
         except Exception as exc:  # noqa: BLE001
-            logger.error("Job matching: domain extraction failed: %s", exc, exc_info=True)
+            logger.error(
+                "Job matching: domain extraction failed: %s", exc, exc_info=True
+            )
             return DomainMapping(
                 language_mappings=[],
                 skill_demonstrations=[],
@@ -221,7 +240,9 @@ class JobMatchingService:
             )
 
     @staticmethod
-    def _format_domain_mappings(domain_mappings: DomainMapping | None) -> tuple[str, str, str]:
+    def _format_domain_mappings(
+        domain_mappings: DomainMapping | None,
+    ) -> tuple[str, str, str]:
         if not domain_mappings:
             return ("none", "none", "none")
 
@@ -273,8 +294,16 @@ class JobMatchingService:
                     "score": rc.score,
                     "content": rc.chunk.content,
                     "metadata": rc.document.metadata,
-                    "title": getattr(rc.job_posting, "title", None) if rc.job_posting else None,
-                    "company": getattr(rc.job_posting, "company", None) if rc.job_posting else None,
+                    "title": (
+                        getattr(rc.job_posting, "title", None)
+                        if rc.job_posting
+                        else None
+                    ),
+                    "company": (
+                        getattr(rc.job_posting, "company", None)
+                        if rc.job_posting
+                        else None
+                    ),
                 }
             )
         return cites

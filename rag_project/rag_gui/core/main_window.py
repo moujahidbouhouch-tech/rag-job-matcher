@@ -21,6 +21,7 @@ from rag_project.rag_gui.config import (
     GUI_DB_CHECK_TIMEOUT,
 )
 from rag_project.rag_gui.styles import DarkTheme, LightTheme
+
 # Added RAGView to imports
 from rag_project.rag_gui.views import DatabaseView, DeleteView, IngestionView, RAGView
 from rag_project.rag_gui.widgets import StatusIndicator
@@ -88,38 +89,40 @@ class ManualIngestionGUI(QtWidgets.QMainWindow):
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
         layout = QtWidgets.QHBoxLayout(central)
-        layout.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        layout.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         layout.setSpacing(PADDING_LARGE)
 
         # Sidebar
         sidebar = QtWidgets.QVBoxLayout()
         sidebar.setSpacing(PADDING_LARGE)
-        sidebar.setContentsMargins(0, PADDING_LARGE+PADDING_SMALL, 0, 0)
+        sidebar.setContentsMargins(0, PADDING_LARGE + PADDING_SMALL, 0, 0)
         sidebar.setAlignment(QtCore.Qt.AlignTop)
-        
+
         # --- Create Buttons ---
-        
+
         # 1. Ingestion (Index 0 - Default)
         self.ingestion_btn = QtWidgets.QPushButton(GUI_SIDEBAR_LABELS["ingestion"])
         self.ingestion_btn.setCheckable(True)
-        self.ingestion_btn.setChecked(True) # Default Active
+        self.ingestion_btn.setChecked(True)  # Default Active
         self.ingestion_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
 
         # 2. Chat RAG (Index 1)
         self.rag_btn = QtWidgets.QPushButton(GUI_SIDEBAR_LABELS["rag"])
         self.rag_btn.setCheckable(True)
         self.rag_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
-        
+
         # 3. Database (Index 2)
         self.database_btn = QtWidgets.QPushButton(GUI_SIDEBAR_LABELS["database"])
         self.database_btn.setCheckable(True)
         self.database_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
-        
+
         # 4. Delete (Index 3)
         self.delete_btn = QtWidgets.QPushButton(GUI_SIDEBAR_LABELS["delete"])
         self.delete_btn.setCheckable(True)
         self.delete_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
-        
+
         # Theme Toggle
         self.theme_toggle_btn = QtWidgets.QPushButton(GUI_SIDEBAR_LABELS["toggle"])
         self.theme_toggle_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
@@ -141,18 +144,18 @@ class ManualIngestionGUI(QtWidgets.QMainWindow):
 
         # --- Content Stack ---
         self.content_stack = QtWidgets.QStackedWidget()
-        
+
         # Initialize Views
         self.ingestion_view = IngestionView(self._app, self.check_database_connection)
         self.rag_view = RAGView(self._app, self._conn_settings)
         self.database_view = DatabaseView(self._conn_settings)
         self.delete_view = DeleteView(self._app.repo, self._conn_settings)
-        
+
         # Add to stack (Order must match switch_view index)
-        self.content_stack.addWidget(self.ingestion_view) # Index 0
-        self.content_stack.addWidget(self.rag_view)       # Index 1
+        self.content_stack.addWidget(self.ingestion_view)  # Index 0
+        self.content_stack.addWidget(self.rag_view)  # Index 1
         self.content_stack.addWidget(self.database_view)  # Index 2
-        self.content_stack.addWidget(self.delete_view)    # Index 3
+        self.content_stack.addWidget(self.delete_view)  # Index 3
 
         sidebar_container = QtWidgets.QWidget()
         sidebar_container.setLayout(sidebar)
@@ -172,7 +175,9 @@ class ManualIngestionGUI(QtWidgets.QMainWindow):
 
     def check_database_connection(self) -> bool:
         try:
-            with psycopg.connect(connect_timeout=GUI_DB_CHECK_TIMEOUT, **self._conn_settings) as conn:
+            with psycopg.connect(
+                connect_timeout=GUI_DB_CHECK_TIMEOUT, **self._conn_settings
+            ) as conn:
                 register_vector(conn)
                 with conn.cursor() as cur:
                     cur.execute("SELECT 1")
@@ -185,7 +190,7 @@ class ManualIngestionGUI(QtWidgets.QMainWindow):
     def update_all_db_status(self):
         """Update the active view."""
         idx = self.content_stack.currentIndex()
-        
+
         if idx == 0:
             self.ingestion_view.refresh_db_status()
         elif idx == 1:

@@ -74,15 +74,24 @@ class AppSettings:
         DB_DEFAULT_USER,
     )
     db_password: Optional[str] = _env_first(
-        ["POSTGRES_PASSWORD_RAG", "POSTGRES_PASSWORD", "DB_POSTGRESDB_PASSWORD", "DB_PASSWORD"],
+        [
+            "POSTGRES_PASSWORD_RAG",
+            "POSTGRES_PASSWORD",
+            "DB_POSTGRESDB_PASSWORD",
+            "DB_PASSWORD",
+        ],
         DB_DEFAULT_PASSWORD,
     )
 
     # Ollama
     ollama_host: str = _env("OLLAMA_HOST", OLLAMA_DEFAULT_HOST)
     ollama_model: str = _env("OLLAMA_MODEL", OLLAMA_DEFAULT_MODEL)
-    ollama_fallback_model: str = _env("OLLAMA_FALLBACK_MODEL", OLLAMA_DEFAULT_FALLBACK_MODEL)
-    ollama_num_ctx: int = int(_env("OLLAMA_NUM_CTX", str(MODELS["llm_primary"]["ollama_num_ctx"])))
+    ollama_fallback_model: str = _env(
+        "OLLAMA_FALLBACK_MODEL", OLLAMA_DEFAULT_FALLBACK_MODEL
+    )
+    ollama_num_ctx: int = int(
+        _env("OLLAMA_NUM_CTX", str(MODELS["llm_primary"]["ollama_num_ctx"]))
+    )
 
     # timeout
     ollama_timeout: float = float(_env("OLLAMA_TIMEOUT", str(OLLAMA_TIMEOUT_SECONDS)))
@@ -91,12 +100,28 @@ class AppSettings:
     embedding_dim: int = int(_env("EMBEDDING_DIM", str(EMBEDDING_DIM)))
 
     # Chunking
-    chunk_token_target: int = int(_env_first(["CHUNK_TOKEN_TARGET"], str(CHUNK_TOKEN_TARGET)))
-    chunk_overlap_tokens: int = int(_env_first(["CHUNK_OVERLAP_TOKENS"], str(CHUNK_OVERLAP_TOKENS)))
-    use_structured_chunker: bool = _env("USE_STRUCTURED_CHUNKER", "true").lower() in {"1", "true", "yes"}
-    structured_min_chunk_words: int = int(_env("STRUCTURED_MIN_CHUNK_WORDS", str(STRUCTURED_MIN_CHUNK_WORDS)))
-    structured_max_llm_input_words: int = int(_env("STRUCTURED_MAX_LLM_INPUT_WORDS", str(STRUCTURED_MAX_LLM_INPUT_WORDS)))
-    structured_use_llm: bool = _env("STRUCTURED_USE_LLM", "0").lower() in {"1", "true", "yes"}
+    chunk_token_target: int = int(
+        _env_first(["CHUNK_TOKEN_TARGET"], str(CHUNK_TOKEN_TARGET))
+    )
+    chunk_overlap_tokens: int = int(
+        _env_first(["CHUNK_OVERLAP_TOKENS"], str(CHUNK_OVERLAP_TOKENS))
+    )
+    use_structured_chunker: bool = _env("USE_STRUCTURED_CHUNKER", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    structured_min_chunk_words: int = int(
+        _env("STRUCTURED_MIN_CHUNK_WORDS", str(STRUCTURED_MIN_CHUNK_WORDS))
+    )
+    structured_max_llm_input_words: int = int(
+        _env("STRUCTURED_MAX_LLM_INPUT_WORDS", str(STRUCTURED_MAX_LLM_INPUT_WORDS))
+    )
+    structured_use_llm: bool = _env("STRUCTURED_USE_LLM", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     chunk_assist_model_id: str = _env("CHUNK_ASSIST_MODEL_ID", CHUNK_ASSIST_MODEL_ID)
     chunk_profiles: dict = field(default_factory=lambda: CHUNK_PROFILES.copy())
 

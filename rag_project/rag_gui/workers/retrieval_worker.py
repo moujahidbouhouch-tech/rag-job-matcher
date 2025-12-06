@@ -19,7 +19,11 @@ class RetrievalWorker(QThread):
 
     def run(self):
         try:
-            logger.info("RetrievalWorker starting question len=%d doc_types=%s", len(self.question), self.doc_types)
+            logger.info(
+                "RetrievalWorker starting question len=%d doc_types=%s",
+                len(self.question),
+                self.doc_types,
+            )
             result = self.query_service.answer(self.question, doc_types=self.doc_types)
             self.answer_ready.emit(result)
         except Exception as exc:  # noqa: BLE001

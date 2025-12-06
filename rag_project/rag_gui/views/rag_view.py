@@ -7,9 +7,9 @@ import requests
 from pgvector.psycopg import register_vector
 
 from rag_project.rag_gui.config import (
-    PADDING_LARGE, 
-    PADDING_SMALL, 
-    FONT_FAMILY, 
+    PADDING_LARGE,
+    PADDING_SMALL,
+    FONT_FAMILY,
     FONT_SIZE_TITLE,
     BUTTON_MIN_WIDTH,
     JOB_SELECTOR_WIDTH,
@@ -59,6 +59,7 @@ from rag_project.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class RAGView(QtWidgets.QWidget):
     """Main RAG Interface: Job Selection + Chat + Context."""
 
@@ -66,7 +67,7 @@ class RAGView(QtWidgets.QWidget):
         super().__init__(parent)
         self._app = app
         self._conn_settings = conn_settings
-        
+
         self._jobs: List[dict] = []
         self._selected_job_ids: set = set()
         self._worker = None
@@ -81,7 +82,9 @@ class RAGView(QtWidgets.QWidget):
 
     def _build_ui(self):
         outer = QtWidgets.QVBoxLayout(self)
-        outer.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        outer.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         outer.setSpacing(PADDING_SMALL)
 
         status_header = QtWidgets.QHBoxLayout()
@@ -107,7 +110,7 @@ class RAGView(QtWidgets.QWidget):
         # ==========================
         self.left_col = QtWidgets.QWidget()
         self.left_col.setFixedWidth(JOB_SELECTOR_WIDTH)
-        
+
         left_layout = QtWidgets.QVBoxLayout(self.left_col)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(PADDING_SMALL)
@@ -128,13 +131,13 @@ class RAGView(QtWidgets.QWidget):
         self.job_scroll.setWidgetResizable(True)
         self.job_scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.job_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        
+
         self.job_container = QtWidgets.QWidget()
         self.job_card_layout = QtWidgets.QVBoxLayout(self.job_container)
         self.job_card_layout.setContentsMargins(0, 0, 0, 0)
         self.job_card_layout.setSpacing(PADDING_SMALL)
-        self.job_card_layout.addStretch() # Push items up
-        
+        self.job_card_layout.addStretch()  # Push items up
+
         self.job_scroll.setWidget(self.job_container)
         left_layout.addWidget(self.job_scroll)
 
@@ -143,8 +146,8 @@ class RAGView(QtWidgets.QWidget):
         # ==========================
         # We pass 'self' as parent so ChatArea can find us
         self.center_col = ChatArea(self._app, parent=self)
-        self.center_col.setObjectName("ContentPanel") # Target the Theme Style
-        
+        self.center_col.setObjectName("ContentPanel")  # Target the Theme Style
+
         # Connect Signal: When ChatArea gets citations, open right panel
         self.center_col.context_requested.connect(self.update_context_panel)
 
@@ -152,30 +155,30 @@ class RAGView(QtWidgets.QWidget):
         # COL 3: Context Panel
         # ==========================
         self.right_col = QtWidgets.QFrame()
-        self.right_col.setObjectName("ContentPanel") # Target the Theme Style
+        self.right_col.setObjectName("ContentPanel")  # Target the Theme Style
         self.right_col.setFixedWidth(CONTEXT_PANEL_WIDTH)
-        self.right_col.setVisible(False) # Start hidden
+        self.right_col.setVisible(False)  # Start hidden
 
         # Right Column Layout
         self.right_layout_container = QtWidgets.QVBoxLayout(self.right_col)
-        
+
         # Header Row (Title + Close Button)
         header_row = QtWidgets.QHBoxLayout()
         r_title = QtWidgets.QLabel(GUI_RAG_HEADER_TEXT)
         r_title.setObjectName("ContextHeaderTitle")
         r_title.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_TITLE, QtGui.QFont.DemiBold))
-        
+
         close_btn = QtWidgets.QPushButton("✖")
         close_btn.setFixedSize(30, 30)
         close_btn.setFlat(True)
         close_btn.clicked.connect(self.toggle_context_panel)
-        
+
         header_row.addWidget(r_title)
         header_row.addStretch()
         header_row.addWidget(close_btn)
-        
+
         self.right_layout_container.addLayout(header_row)
-        
+
         # Placeholder for source cards (Will be populated dynamically)
         self.sources_scroll = QtWidgets.QScrollArea()
         self.sources_scroll.setWidgetResizable(True)
@@ -184,7 +187,7 @@ class RAGView(QtWidgets.QWidget):
         self.sources_layout = QtWidgets.QVBoxLayout(self.sources_container)
         self.sources_layout.addStretch()
         self.sources_scroll.setWidget(self.sources_container)
-        
+
         self.right_layout_container.addWidget(self.sources_scroll)
 
         # Add columns to main
@@ -210,20 +213,38 @@ class RAGView(QtWidgets.QWidget):
     def route_input(self, user_text: str) -> RouteDecision:
         """Use RouterService to classify user intent."""
         context = {"selected_jobs": list(self._selected_job_ids)}
-        logger.info("RAGView route_input text len=%d selected_jobs=%d", len(user_text), len(self._selected_job_ids))
+        logger.info(
+            "RAGView route_input text len=%d selected_jobs=%d",
+            len(user_text),
+            len(self._selected_job_ids),
+        )
         return self._app.router.route(user_text, context)
 
     def start_routing(self, user_text: str, thinking_bubble=None):
         """Start router in a background thread to avoid blocking UI."""
-        history = self.center_col.get_history_tail() if hasattr(self.center_col, "get_history_tail") else []
+        history = (
+            self.center_col.get_history_tail()
+            if hasattr(self.center_col, "get_history_tail")
+            else []
+        )
         context = {"selected_jobs": list(self._selected_job_ids), "history": history}
-        logger.info("RAGView start_routing text len=%d history_len=%d", len(user_text), len(history))
+        logger.info(
+            "RAGView start_routing text len=%d history_len=%d",
+            len(user_text),
+            len(history),
+        )
         self._router_worker = RouterWorker(self._app.router, user_text, context)
-        self._router_worker.decision_ready.connect(lambda decision: self.dispatch_action(decision, user_text, thinking_bubble))
-        self._router_worker.error_occurred.connect(lambda msg: self._on_route_error(msg, thinking_bubble))
+        self._router_worker.decision_ready.connect(
+            lambda decision: self.dispatch_action(decision, user_text, thinking_bubble)
+        )
+        self._router_worker.error_occurred.connect(
+            lambda msg: self._on_route_error(msg, thinking_bubble)
+        )
         self._router_worker.start()
 
-    def dispatch_action(self, decision: RouteDecision, user_text: str, thinking_bubble=None):
+    def dispatch_action(
+        self, decision: RouteDecision, user_text: str, thinking_bubble=None
+    ):
         """Execute action based on router decision."""
         if decision.needs_clarification:
             self.center_col.add_message(
@@ -242,19 +263,29 @@ class RAGView(QtWidgets.QWidget):
         handler = handlers.get(decision.action, self._handle_unknown)
         handler(user_text, decision, thinking_bubble)
 
-    def _handle_job_match(self, user_text: str, _decision: RouteDecision, thinking_bubble=None):
+    def _handle_job_match(
+        self, user_text: str, _decision: RouteDecision, thinking_bubble=None
+    ):
         # We don't update the bubble here; job matching already posts progress messages
         self.run_job_matching(user_text)
 
-    def _handle_retrieve(self, _user_text: str, _decision: RouteDecision, thinking_bubble=None):
+    def _handle_retrieve(
+        self, _user_text: str, _decision: RouteDecision, thinking_bubble=None
+    ):
         question = _user_text
         # run retrieval in background to avoid freezing UI
         self._retrieval_worker = RetrievalWorker(self._app.query, question)
-        self._retrieval_worker.answer_ready.connect(lambda answer: self._on_retrieval_done(answer, thinking_bubble))
-        self._retrieval_worker.error_occurred.connect(lambda msg: self._on_retrieval_error(msg, thinking_bubble))
+        self._retrieval_worker.answer_ready.connect(
+            lambda answer: self._on_retrieval_done(answer, thinking_bubble)
+        )
+        self._retrieval_worker.error_occurred.connect(
+            lambda msg: self._on_retrieval_error(msg, thinking_bubble)
+        )
         self._retrieval_worker.start()
 
-    def _handle_help(self, _user_text: str, _decision: RouteDecision, thinking_bubble=None):
+    def _handle_help(
+        self, _user_text: str, _decision: RouteDecision, thinking_bubble=None
+    ):
         help_text = (
             "I can help you with:\n"
             "- Job Matching: select a job and ask to compare.\n"
@@ -264,12 +295,14 @@ class RAGView(QtWidgets.QWidget):
         self.center_col.add_message(help_text, False)
         self.center_col.set_input_enabled(True)
 
-    def _handle_unknown(self, _user_text: str, _decision: RouteDecision, thinking_bubble=None):
+    def _handle_unknown(
+        self, _user_text: str, _decision: RouteDecision, thinking_bubble=None
+    ):
         self.center_col.add_message(
             "I'm not sure what to do. Try:\n"
-            "• \"Compare me to this job\"\n"
-            "• \"What skills are required?\"\n"
-            "• \"Help\"",
+            '• "Compare me to this job"\n'
+            '• "What skills are required?"\n'
+            '• "Help"',
             False,
         )
         self.center_col.set_input_enabled(True)
@@ -277,7 +310,9 @@ class RAGView(QtWidgets.QWidget):
     def _on_retrieval_done(self, answer, thinking_bubble=None):
         logger.info("RAGView retrieval completed")
         if thinking_bubble is not None:
-            thinking_bubble.lbl.setText(f"<div style='white-space: pre-wrap; word-break: break-word;'>{answer.answer}</div>")
+            thinking_bubble.lbl.setText(
+                f"<div style='white-space: pre-wrap; word-break: break-word;'>{answer.answer}</div>"
+            )
         else:
             self.center_col.add_message(answer.answer, False)
         self.center_col.set_input_enabled(True)
@@ -286,7 +321,9 @@ class RAGView(QtWidgets.QWidget):
     def _on_retrieval_error(self, msg: str, thinking_bubble=None):
         logger.error("RAGView retrieval error: %s", msg)
         if thinking_bubble is not None:
-            thinking_bubble.lbl.setText(f"<div style='white-space: pre-wrap; word-break: break-word;'>Retrieval failed: {msg}</div>")
+            thinking_bubble.lbl.setText(
+                f"<div style='white-space: pre-wrap; word-break: break-word;'>Retrieval failed: {msg}</div>"
+            )
         else:
             self.center_col.add_message(f"Retrieval failed: {msg}", False)
         self.center_col.set_input_enabled(True)
@@ -295,7 +332,9 @@ class RAGView(QtWidgets.QWidget):
     def _on_route_error(self, msg: str, thinking_bubble=None):
         logger.error("RAGView routing error: %s", msg)
         if thinking_bubble is not None:
-            thinking_bubble.lbl.setText(f"<div style='white-space: pre-wrap; word-break: break-word;'>Routing failed: {msg}</div>")
+            thinking_bubble.lbl.setText(
+                f"<div style='white-space: pre-wrap; word-break: break-word;'>Routing failed: {msg}</div>"
+            )
         else:
             self.center_col.add_message(f"Routing failed: {msg}", False)
         self.center_col.set_input_enabled(True)
@@ -305,7 +344,7 @@ class RAGView(QtWidgets.QWidget):
         logger.info("RAGView loading jobs")
         self.loading_label.setVisible(True)
         self.job_scroll.setVisible(False)
-        
+
         self._worker = JobLoaderWorker(self._conn_settings)
         self._worker.finished.connect(self.on_jobs_loaded)
         self._worker.error.connect(self.on_worker_error)
@@ -316,7 +355,7 @@ class RAGView(QtWidgets.QWidget):
         self.loading_label.setVisible(False)
         self.job_scroll.setVisible(True)
         self._jobs = jobs
-        
+
         # Clear existing cards (except the stretch item)
         while self.job_card_layout.count() > 1:
             item = self.job_card_layout.takeAt(0)
@@ -355,10 +394,16 @@ class RAGView(QtWidgets.QWidget):
             self.center_col.set_input_enabled(True)
             return
 
-        logger.info("RAGView running job matching selected_id=%s question_len=%d", job_id, len(question))
+        logger.info(
+            "RAGView running job matching selected_id=%s question_len=%d",
+            job_id,
+            len(question),
+        )
         self.center_col.add_message(JOB_MATCHING_ANALYZING, False)
         self._job_worker = JobMatchingWorker(self._app.job_matching, job_text)
-        self._job_worker.progress_update.connect(lambda msg: self.center_col.add_message(msg, False))
+        self._job_worker.progress_update.connect(
+            lambda msg: self.center_col.add_message(msg, False)
+        )
         self._job_worker.requirements_ready.connect(self._on_requirements_ready)
         self._job_worker.evaluation_ready.connect(self._on_evaluation_ready)
         self._job_worker.analysis_complete.connect(self._on_job_match_complete)
@@ -367,7 +412,9 @@ class RAGView(QtWidgets.QWidget):
 
     def _load_job_text(self, job_id: str) -> str:
         try:
-            with psycopg.connect(connect_timeout=GUI_JOBLOADER_DB_TIMEOUT, **self._conn_settings) as conn:
+            with psycopg.connect(
+                connect_timeout=GUI_JOBLOADER_DB_TIMEOUT, **self._conn_settings
+            ) as conn:
                 register_vector(conn)
                 with conn.cursor() as cur:
                     cur.execute(SQL_FETCH_FULL_DOCUMENT, (job_id,))
@@ -375,17 +422,26 @@ class RAGView(QtWidgets.QWidget):
                     return "\n".join([r[0] for r in rows]) if rows else ""
         except Exception as exc:  # noqa: BLE001
             self.center_col.add_message(f"{JOB_MATCHING_LOAD_FAILED} ({exc})", False)
-            logger.error("RAGView failed loading job text id=%s: %s", job_id, exc, exc_info=True)
+            logger.error(
+                "RAGView failed loading job text id=%s: %s", job_id, exc, exc_info=True
+            )
             return ""
 
     def _on_job_match_complete(self, result):
         summary = [
             JOB_MATCHING_RESULT_HEADER,
             JOB_MATCHING_MATCH_RATE.format(rate=result.match_rate),
-            JOB_MATCHING_MATCHED_COUNT.format(match=result.match_count, total=len(result.evaluations)),
+            JOB_MATCHING_MATCHED_COUNT.format(
+                match=result.match_count, total=len(result.evaluations)
+            ),
         ]
 
-        logger.info("RAGView job matching complete rate=%.1f%% matches=%d/%d", result.match_rate, result.match_count, len(result.evaluations))
+        logger.info(
+            "RAGView job matching complete rate=%.1f%% matches=%d/%d",
+            result.match_rate,
+            result.match_count,
+            len(result.evaluations),
+        )
         self.center_col.add_message("\n".join(summary), False)
         self.center_col.set_input_enabled(True)
 
@@ -398,7 +454,11 @@ class RAGView(QtWidgets.QWidget):
         verdict = evaluation.verdict if hasattr(evaluation, "verdict") else "Unknown"
         reasoning = evaluation.reasoning if hasattr(evaluation, "reasoning") else ""
         citations = getattr(evaluation, "citations", []) or []
-        markers = " ".join([f"[{c['label']}]({c['label']})" for c in citations]) if citations else ""
+        markers = (
+            " ".join([f"[{c['label']}]({c['label']})" for c in citations])
+            if citations
+            else ""
+        )
         msg = f"{verdict} | {req.name}: {reasoning} {markers}".strip()
         sources = []
         for c in citations:
@@ -445,12 +505,12 @@ class RAGView(QtWidgets.QWidget):
     def update_context_panel(self, sources: list):
         """Populate the right column and show it."""
         # 1. Clear previous content
-# Clear the sources_layout
-        while self.sources_layout.count() > 1: # Keep the stretch at the bottom
+        # Clear the sources_layout
+        while self.sources_layout.count() > 1:  # Keep the stretch at the bottom
             item = self.sources_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        
+
         # 2. Add Sources
         if not sources:
             lbl = QtWidgets.QLabel(GUI_NO_CONTEXT_TEXT)
@@ -477,11 +537,15 @@ class RAGView(QtWidgets.QWidget):
 
         model_ok = self._check_models()
         self.model_indicator.set_status(model_ok)
-        self.model_status_label.setText("Models: ready" if model_ok else "Models: error")
+        self.model_status_label.setText(
+            "Models: ready" if model_ok else "Models: error"
+        )
 
     def _check_db(self) -> bool:
         try:
-            with psycopg.connect(connect_timeout=GUI_DB_CHECK_TIMEOUT, **self._conn_settings) as conn:
+            with psycopg.connect(
+                connect_timeout=GUI_DB_CHECK_TIMEOUT, **self._conn_settings
+            ) as conn:
                 register_vector(conn)
                 with conn.cursor() as cur:
                     cur.execute("SELECT 1")
@@ -492,8 +556,15 @@ class RAGView(QtWidgets.QWidget):
 
     def _check_models(self) -> bool:
         try:
-            host = getattr(self._app.settings, "ollama_host", os.getenv("OLLAMA_HOST", OLLAMA_DEFAULT_HOST))
-            resp = requests.get(f"{host}{OLLAMA_HEALTHCHECK_PATH}", timeout=OLLAMA_HEALTH_TIMEOUT_SECONDS)
+            host = getattr(
+                self._app.settings,
+                "ollama_host",
+                os.getenv("OLLAMA_HOST", OLLAMA_DEFAULT_HOST),
+            )
+            resp = requests.get(
+                f"{host}{OLLAMA_HEALTHCHECK_PATH}",
+                timeout=OLLAMA_HEALTH_TIMEOUT_SECONDS,
+            )
             return resp.status_code == 200
         except Exception:
             return False

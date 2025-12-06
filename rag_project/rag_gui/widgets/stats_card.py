@@ -27,16 +27,24 @@ class StatsCard(QtWidgets.QFrame):
             f"StatsCard {{ border: 1px solid transparent; border-radius: {BORDER_RADIUS}px; }}"
         )
         layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        layout.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         layout.setSpacing(PADDING_SMALL)
 
         title_label = QtWidgets.QLabel(self._title)
         title_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL))
-        title_label.setStyleSheet("border: none; text-transform: uppercase; letter-spacing: 0.5px;")
+        title_label.setStyleSheet(
+            "border: none; text-transform: uppercase; letter-spacing: 0.5px;"
+        )
 
         self.value_label = QtWidgets.QLabel(self._value_text)
-        self.value_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_BODY + 7, QtGui.QFont.DemiBold))
-        self.value_label.setStyleSheet("color: inherit; border: none; background: transparent;")
+        self.value_label.setFont(
+            QtGui.QFont(FONT_FAMILY, FONT_SIZE_BODY + 7, QtGui.QFont.DemiBold)
+        )
+        self.value_label.setStyleSheet(
+            "color: inherit; border: none; background: transparent;"
+        )
 
         layout.addWidget(title_label)
         layout.addWidget(self.value_label)

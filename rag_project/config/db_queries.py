@@ -1,13 +1,19 @@
 """SQL queries and health-check statements."""
 
-SQL_INSERT_DOCUMENT = "INSERT INTO documents (id, doc_type, metadata, created_at) VALUES (%s, %s, %s, %s)"
+SQL_INSERT_DOCUMENT = (
+    "INSERT INTO documents (id, doc_type, metadata, created_at) VALUES (%s, %s, %s, %s)"
+)
 SQL_INSERT_JOB_POSTING = """
 INSERT INTO job_postings
 (document_id, related_company_id, title, location_text, salary_range, url, language, posted_at, match_score, company)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
-SQL_INSERT_PERSONAL_DOCUMENT = "INSERT INTO personal_documents (document_id, category) VALUES (%s, %s)"
-SQL_INSERT_COMPANY_INFO = "INSERT INTO company_info (document_id, name, industry) VALUES (%s, %s, %s)"
+SQL_INSERT_PERSONAL_DOCUMENT = (
+    "INSERT INTO personal_documents (document_id, category) VALUES (%s, %s)"
+)
+SQL_INSERT_COMPANY_INFO = (
+    "INSERT INTO company_info (document_id, name, industry) VALUES (%s, %s, %s)"
+)
 SQL_DELETE_DOCUMENT = "DELETE FROM documents WHERE id = %s"
 SQL_INSERT_CHUNK = "INSERT INTO chunks (id, document_id, chunk_index, content, token_count, created_at) VALUES (%s, %s, %s, %s, %s, %s)"
 SQL_INSERT_EMBEDDING = "INSERT INTO embeddings (chunk_id, embedding, created_at) VALUES (%s, %s::vector, NOW())"
@@ -87,7 +93,9 @@ HEALTHCHECK_COLUMN_QUERY = """
                   );
                 """
 
-SQL_FETCH_FULL_DOCUMENT = "SELECT content FROM chunks WHERE document_id = %s ORDER BY chunk_index ASC"
+SQL_FETCH_FULL_DOCUMENT = (
+    "SELECT content FROM chunks WHERE document_id = %s ORDER BY chunk_index ASC"
+)
 
 __all__ = [
     "SQL_INSERT_DOCUMENT",

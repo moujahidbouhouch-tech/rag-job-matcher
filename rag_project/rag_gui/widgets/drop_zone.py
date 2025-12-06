@@ -51,7 +51,9 @@ class DropZone(QtWidgets.QFrame):
         layout.setSpacing(PADDING_SMALL)
 
         icon_label = QtWidgets.QLabel("↑")
-        icon_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_BODY + 9, QtGui.QFont.Light))
+        icon_label.setFont(
+            QtGui.QFont(FONT_FAMILY, FONT_SIZE_BODY + 9, QtGui.QFont.Light)
+        )
         icon_label.setAlignment(QtCore.Qt.AlignCenter)
         icon_label.setStyleSheet(f"color: {COLOR_DARK_MUTED}; border: none;")
 
