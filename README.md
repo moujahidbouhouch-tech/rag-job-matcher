@@ -15,8 +15,8 @@ Module paths such as `rag_project/...` refer to the Python package in this repos
 - Health checks for DB schema/pgvector/Ollama/models and strong pytest coverage (unit, integration, DB safety, GUI workers).
 
 ## Prerequisites
-- Python 3.12
-- PostgreSQL with pgvector enabled (default port 5433 for the RAG database)
+- Python 3.12.6+ (recommended: 3.12.10)
+- **Visual C++ Redistributables** (Windows only - **CRITICAL for PyTorch**): [Download here](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 - Ollama running locally with models pulled:
   - `qwen2.5:7b-instruct-q4_k_m` (primary + CV chunking)
   - `llama3.1:8b` (fallback)
@@ -24,12 +24,111 @@ Module paths such as `rag_project/...` refer to the Python package in this repos
 - Embeddings: `BAAI/bge-m3` (multilingual, 1024-d) for cross-language support.
 
 ## Quick Start
+1. **Create and activate virtual environment** (Python 3.12.6+):
 ```bash
-pip install -r requirements.txt
-cp .env.example .env   # Edit DB credentials if needed
-./scripts/apply_rag_schema.sh   # or: psql -f scripts/rag_schema.sql against the RAG database
-python -m rag_project.rag_gui.main
+   python -m venv .venv
+
+   # Windows (CMD)
+   .venv\Scripts\activate.bat
+   
+   # Linux/macOS
+   source .venv/bin/activate
 ```
+
+2. **Install dependencies**:
+```bash
+   pip install -r requirements.txt
+```
+
+3. **Configure environment**:
+```bash
+   cp .env.example .env   # Edit DB credentials if needed
+```
+
+4. **Apply database schema**:
+```bash
+   # Linux/macOS
+   ./scripts/apply_rag_schema.sh
+   
+   # Windows (using Docker)
+   docker exec -i rag-db psql -U rag -d rag < scripts/rag_schema.sql
+```
+
+5. **Pull Ollama models** (see Prerequisites section)
+
+6. **Start the GUI**:
+```bash
+   # Linux/macOS
+   ./scripts/run_gui.sh
+   
+   # Windows
+   .\scripts\run_gui.bat
+   
+   # Or manually
+   python -m rag_project.rag_gui.main
+```
+   
+   **Note:** For better PyQt performance, run the launch script from a separate terminal outside VSCode.
+
+## GPU Support & PyTorch Configuration
+
+### Overview
+This application uses PyTorch for embeddings and can leverage GPU acceleration for significantly faster processing. The required PyTorch version depends on your hardware.
+
+### Tested Configurations
+
+| Hardware | PyTorch Version | CUDA | Embeddings | LLMs (Ollama) |
+|----------|----------------|------|------------|---------------|
+| CPU Only | 2.6.0 (CPU) | N/A | CPU | CPU |
+| NVIDIA RTX 5060 Ti (sm_120) | 2.6.0 (CPU) | N/A | CPU | GPU |
+| NVIDIA GPUs (sm_50 - sm_90) | 2.6.0 (cu124) | 12.4 | GPU | GPU |
+
+### GPU Compatibility Check
+
+If you encounter CUDA errors during embedding (e.g., "no kernel image is available for execution on the device"), check your GPU's compute capability:
+```bash
+python -c "import torch; print(torch.cuda.get_device_capability())"
+```
+
+**Note:** CUDA errors only affect embeddings. LLM inference via Ollama uses GPU independently and is unaffected.
+
+**Common scenarios:**
+
+1. **Compute capability ≤ 9.0** (older GPUs):
+```bash
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+```
+
+2. **Compute capability ≥ 12.0** (RTX 50-series, Blackwell architecture):
+```bash
+   pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
+```
+
+3. **CPU-only** (no GPU or debugging):
+```bash
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+```
+
+### Troubleshooting
+
+**Error: "CUDA error: no kernel image is available"**
+- Your GPU's compute capability is not supported by the installed PyTorch version
+- Solution: Install nightly builds (see scenario 2 above)
+
+**Error: "A dynamic link library (DLL) initialization routine failed"** (Windows)
+- Missing Visual C++ Redistributables (see Prerequisites)
+- Solution: Install from https://aka.ms/vs/17/release/vc_redist.x64.exe
+
+**Slow performance during embedding:**
+- Check if CUDA is enabled: `python -c "import torch; print(torch.cuda.is_available())"`
+- If `False`, reinstall PyTorch with CUDA support (see above)
+
+### Performance Notes
+- **GPU acceleration**: Embeddings process ~10-50x faster than CPU when GPU-supported
+- **RTX 50-series limitation**: Ollama LLMs use GPU normally; embeddings run on CPU until PyTorch adds sm_120 support
+- **VRAM requirements**: Minimum 4GB recommended, 8GB+ for large documents
+- **CPU fallback**: Always works but slower for embeddings only (LLM inference unaffected)
+
 
 ## Configuration (environment variables)
 Key variables (defaults come from the core config modules):
