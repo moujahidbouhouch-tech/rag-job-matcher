@@ -132,10 +132,14 @@ class IngestionWorker(QtCore.QThread):
                     # If stopped, ignore other errors (like DB connection closed)
                     if not self._is_running:
                         raise UserAbortException()
-                    self.log_message.emit(f"Error processing file: {str(e)}")
-                    # We continue to next file unless it's a critical crash, 
-                    # but usually we might want to stop here too. 
-                    # For now, let's log and continue.
+                    # Emit error signal for UI to handle
+                    error_msg = f"Error processing {os.path.basename(file_path)}: {str(e)}"
+                    self.log_message.emit(error_msg)
+                    self.error_occurred.emit(error_msg)
+                    logger.error("IngestionWorker file error: %s", e, exc_info=True)
+                    # Stop processing remaining files after first error
+
+                    break
 
             self.detail_status.emit(GUI_INGEST_DONE_TEXT)
             self.progress_updated.emit(100, 100)
