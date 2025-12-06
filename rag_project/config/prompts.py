@@ -54,7 +54,7 @@ STRUCTURED_BOUNDARY_PROMPT = (
     "Keep bullets with their parent item. Do not emit any text except JSON.\n\n"
     "Lines (numbered from 0):\n{lines}\n\n"
     "Hint boundaries: {hints}\n\n"
-    'Respond as: {"boundaries": [list of integers]}'
+    'Respond as: {{"boundaries": [list of integers]}}'
 )
 
 CV_CHUNKER_PROMPT_TEMPLATE = """Analyze this CV and identify where each SEMANTIC SECTION ends.
