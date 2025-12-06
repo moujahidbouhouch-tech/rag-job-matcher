@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import torch
+
 from PyQt5 import QtWidgets  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[2]
