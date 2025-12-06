@@ -11,11 +11,13 @@ class FakeIngestion:
         self.called_with = None
     
     def ingest_file(self, file_path: str, metadata=None, progress_cb=None):
+        # 1. Simulate Error for "missing file" test
         if "missing" in str(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
         self.called_with = (file_path, metadata)
         
+        # 2. Simulate Success Callback so "ingestion completed" log appears
         if progress_cb:
              progress_cb("done", {"message": "Ingestion completed"})
         
