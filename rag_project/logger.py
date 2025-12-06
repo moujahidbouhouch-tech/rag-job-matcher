@@ -4,7 +4,12 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Iterable, List
 
-from rag_project.config.__init__ import LOG_DIRECTORY, LOG_FILE_NAME, LOG_FORMAT, DEFAULT_LOG_LEVEL
+from rag_project.config.__init__ import (
+    LOG_DIRECTORY,
+    LOG_FILE_NAME,
+    LOG_FORMAT,
+    DEFAULT_LOG_LEVEL,
+)
 
 
 _LOG_DIR = Path(__file__).resolve().parents[1] / LOG_DIRECTORY
@@ -28,7 +33,10 @@ def get_logger(name: str) -> logging.Logger:
     # File handler only (keep GUI stdout clean)
     try:
         file_handler = RotatingFileHandler(
-            _LOG_FILE, maxBytes=_LOG_MAX_BYTES, backupCount=_LOG_BACKUP_COUNT, encoding="utf-8"
+            _LOG_FILE,
+            maxBytes=_LOG_MAX_BYTES,
+            backupCount=_LOG_BACKUP_COUNT,
+            encoding="utf-8",
         )
         file_handler.setFormatter(fmt)
         logger.addHandler(file_handler)

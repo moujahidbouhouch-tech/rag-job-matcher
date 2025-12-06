@@ -7,7 +7,10 @@ from rag_project.infrastructure.health import ollama_base_url
 
 # These tests exercise external services; skip by default unless explicitly enabled.
 if os.getenv("RUN_LLM_INFRA_TESTS", "0") != "1":
-    pytest.skip("LLM infra tests disabled; set RUN_LLM_INFRA_TESTS=1 to enable.", allow_module_level=True)
+    pytest.skip(
+        "LLM infra tests disabled; set RUN_LLM_INFRA_TESTS=1 to enable.",
+        allow_module_level=True,
+    )
 
 
 def test_ollama_generate_smoke():
@@ -49,5 +52,9 @@ def test_embedding_round_trip():
         pytest.skip(f"Embedding model not available or failed to load: {exc}")
 
     assert vec1.shape == vec2.shape == (1024,), "Embedding dimension mismatch"
-    cosine_sim = float((vec1 @ vec2) / ((vec1**2).sum() ** 0.5 * (vec2**2).sum() ** 0.5))
-    assert cosine_sim > 0.999, f"Embedding inconsistency too high (cosine={cosine_sim:.6f})"
+    cosine_sim = float(
+        (vec1 @ vec2) / ((vec1**2).sum() ** 0.5 * (vec2**2).sum() ** 0.5)
+    )
+    assert (
+        cosine_sim > 0.999
+    ), f"Embedding inconsistency too high (cosine={cosine_sim:.6f})"

@@ -13,7 +13,9 @@ def test_chunker_split_preserves_decimals_and_sentences():
 
 def test_chunker_respects_overlap_and_token_budget():
     # ~80 words, should produce multiple chunks with 25% overlap
-    base_sentence = "This is a moderately long sentence that we repeat to fill the buffer."
+    base_sentence = (
+        "This is a moderately long sentence that we repeat to fill the buffer."
+    )
     text = " ".join([base_sentence for _ in range(40)])
     chunks = chunk_text(text, max_tokens=50, overlap_tokens=12)
     assert len(chunks) > 1
@@ -72,7 +74,9 @@ def test_chunker_handles_unicode_and_emoji():
 
 
 def test_chunker_parse_and_chunk_pipeline_covers_all_characters(tmp_path):
-    source_text = "Line one.\nLine two with emoji 😊.\nLast line to cover chunk overlap."
+    source_text = (
+        "Line one.\nLine two with emoji 😊.\nLast line to cover chunk overlap."
+    )
     txt_path = tmp_path / "pipeline.txt"
     txt_path.write_text(source_text, encoding="utf-8")
     loaded = txt_path.read_text(encoding="utf-8")

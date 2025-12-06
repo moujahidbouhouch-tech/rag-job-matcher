@@ -27,7 +27,9 @@ def test_which_database_am_i_using():
             print(f"\nACTUAL DATABASE CONNECTED: {actual_db}")
             print("=" * 80 + "\n")
             # Guard: ensure we are not on production DB
-            assert actual_db != "rag", f"DANGER: Tests are using production DB '{actual_db}'!"
-            assert actual_db == os.getenv("TEST_DB_NAME", "rag_test_db"), (
-                f"Tests should use '{os.getenv('TEST_DB_NAME', 'rag_test_db')}', but using '{actual_db}'"
-            )
+            assert (
+                actual_db != "rag"
+            ), f"DANGER: Tests are using production DB '{actual_db}'!"
+            assert actual_db == os.getenv(
+                "TEST_DB_NAME", "rag_test_db"
+            ), f"Tests should use '{os.getenv('TEST_DB_NAME', 'rag_test_db')}', but using '{actual_db}'"

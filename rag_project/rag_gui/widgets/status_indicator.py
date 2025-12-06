@@ -19,7 +19,11 @@ class StatusIndicator(QtWidgets.QWidget):
     def paintEvent(self, event):  # noqa: N802
         painter = QtGui.QPainter(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
-        color = QtGui.QColor(GUI_STATUS_COLORS["ok"]) if self._status else QtGui.QColor(GUI_STATUS_COLORS["error"])
+        color = (
+            QtGui.QColor(GUI_STATUS_COLORS["ok"])
+            if self._status
+            else QtGui.QColor(GUI_STATUS_COLORS["error"])
+        )
         painter.setBrush(QtGui.QBrush(color))
         painter.setPen(QtCore.Qt.NoPen)
         size = self.width()

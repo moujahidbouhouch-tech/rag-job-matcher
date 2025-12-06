@@ -42,7 +42,9 @@ class DocumentRepository(ABC):
 
 class ChunkRepository(ABC):
     @abstractmethod
-    def insert_chunks_with_embeddings(self, chunks: List[Chunk], embeddings: List[List[float]]) -> None:
+    def insert_chunks_with_embeddings(
+        self, chunks: List[Chunk], embeddings: List[List[float]]
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod

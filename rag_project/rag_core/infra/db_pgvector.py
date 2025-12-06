@@ -63,15 +63,26 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
     # Document/subtype inserts
     # ------------------------------------------------------------------ #
     def insert_document(self, document: Document) -> None:
-        logger.debug("repo.insert_document id=%s type=%s", document.id, document.doc_type)
+        logger.debug(
+            "repo.insert_document id=%s type=%s", document.id, document.doc_type
+        )
         with self._get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 SQL_INSERT_DOCUMENT,
-                (document.id, document.doc_type, Json(document.metadata) if document.metadata else None, document.created_at),
+                (
+                    document.id,
+                    document.doc_type,
+                    Json(document.metadata) if document.metadata else None,
+                    document.created_at,
+                ),
             )
 
     def insert_job_posting(self, job_posting: JobPosting) -> None:
-        logger.debug("repo.insert_job_posting doc_id=%s title=%s", job_posting.document_id, job_posting.title)
+        logger.debug(
+            "repo.insert_job_posting doc_id=%s title=%s",
+            job_posting.document_id,
+            job_posting.title,
+        )
         with self._get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 SQL_INSERT_JOB_POSTING,
@@ -90,7 +101,11 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
             )
 
     def insert_personal_document(self, personal: PersonalDocument) -> None:
-        logger.debug("repo.insert_personal_document doc_id=%s category=%s", personal.document_id, personal.category)
+        logger.debug(
+            "repo.insert_personal_document doc_id=%s category=%s",
+            personal.document_id,
+            personal.category,
+        )
         with self._get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 SQL_INSERT_PERSONAL_DOCUMENT,
@@ -98,7 +113,11 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
             )
 
     def insert_company_info(self, company: CompanyInfo) -> None:
-        logger.debug("repo.insert_company_info doc_id=%s name=%s", company.document_id, company.name)
+        logger.debug(
+            "repo.insert_company_info doc_id=%s name=%s",
+            company.document_id,
+            company.name,
+        )
         with self._get_conn() as conn, conn.cursor() as cur:
             cur.execute(
                 SQL_INSERT_COMPANY_INFO,
@@ -113,7 +132,9 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
     # ------------------------------------------------------------------ #
     # Chunk + embedding
     # ------------------------------------------------------------------ #
-    def insert_chunks_with_embeddings(self, chunks: List[Chunk], embeddings: List[List[float]]) -> None:
+    def insert_chunks_with_embeddings(
+        self, chunks: List[Chunk], embeddings: List[List[float]]
+    ) -> None:
         if len(chunks) != len(embeddings):
             raise ValueError("chunks and embeddings length mismatch")
         logger.debug("repo.insert_chunks_with_embeddings count=%d", len(chunks))
@@ -121,7 +142,14 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
             for chunk, emb in zip(chunks, embeddings):
                 cur.execute(
                     SQL_INSERT_CHUNK,
-                    (chunk.id, chunk.document_id, chunk.chunk_index, chunk.content, chunk.token_count, chunk.created_at),
+                    (
+                        chunk.id,
+                        chunk.document_id,
+                        chunk.chunk_index,
+                        chunk.content,
+                        chunk.token_count,
+                        chunk.created_at,
+                    ),
                 )
                 cur.execute(
                     SQL_INSERT_EMBEDDING,
@@ -138,7 +166,9 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
                 return func()
             except psycopg.OperationalError as exc:
                 last_exc = exc
-                logger.warning("repo.search retry %d/%d: %s", attempt + 1, DB_RETRY_ATTEMPTS, exc)
+                logger.warning(
+                    "repo.search retry %d/%d: %s", attempt + 1, DB_RETRY_ATTEMPTS, exc
+                )
                 time.sleep(DB_RETRY_BACKOFF_SECONDS * (attempt + 1))
         if last_exc:
             logger.error("repo.search failed after retries: %s", last_exc)
@@ -156,11 +186,11 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
         def _query():
             where_clauses = [SQL_WHERE_MIN_MATCH]
             params: list = [query_embedding, min_match_score]
-            
+
             if posted_after is not None:
                 where_clauses.append(SQL_WHERE_POSTED_AFTER)
                 params.append(posted_after)
-            
+
             if doc_types:
                 where_clauses.append(SQL_WHERE_DOC_TYPES)
                 params.append(doc_types)
@@ -174,7 +204,7 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
             # -------------------------------------
 
             where_sql = " AND ".join(where_clauses)
-            
+
             # Append the remaining params for ORDER BY and LIMIT
             params.extend([query_embedding, limit])
 
@@ -185,7 +215,7 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
                 WEIGHT_RECENCY=WEIGHT_RECENCY,
                 RECENCY_DECAY_DAYS=RECENCY_DECAY_DAYS,
             )
-            
+
             with self._get_conn() as conn, conn.cursor() as cur:
                 cur.execute(sql, params)
                 return cur.fetchall()
@@ -227,7 +257,12 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
                 content=content,
                 token_count=token_count,
             )
-            document = Document(id=doc_id, doc_type=doc_type, metadata=metadata, created_at=doc_created_at)
+            document = Document(
+                id=doc_id,
+                doc_type=doc_type,
+                metadata=metadata,
+                created_at=doc_created_at,
+            )
             jp = None
             pd = None
             ci = None
@@ -250,9 +285,13 @@ class PgVectorRepository(DocumentRepository, ChunkRepository):
                 DOC_TYPE_THESIS,
                 DOC_TYPE_PERSONAL_PROJECT,
             }:
-                pd = PersonalDocument(document_id=doc_id, category=personal_category or doc_type)
+                pd = PersonalDocument(
+                    document_id=doc_id, category=personal_category or doc_type
+                )
             if doc_type == DOC_TYPE_COMPANY:
-                ci = CompanyInfo(document_id=doc_id, name=company_name, industry=industry)
+                ci = CompanyInfo(
+                    document_id=doc_id, name=company_name, industry=industry
+                )
 
             similarity = 1 - float(distance)
             recency = (

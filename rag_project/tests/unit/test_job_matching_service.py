@@ -65,7 +65,15 @@ class FakeRepo(ChunkRepository):
     def insert_chunks_with_embeddings(self, chunks, embeddings):
         raise NotImplementedError
 
-    def search(self, query_embedding, limit=5, min_match_score=0.0, posted_after=None, doc_types=None, filters=None):
+    def search(
+        self,
+        query_embedding,
+        limit=5,
+        min_match_score=0.0,
+        posted_after=None,
+        doc_types=None,
+        filters=None,
+    ):
         return [
             RetrievedChunk(
                 chunk=item.chunk,
@@ -97,8 +105,12 @@ def test_job_matching_service_returns_match_result():
     embedder = FakeEmbedder()
 
     doc = Document(id=uuid4(), doc_type="cv")
-    chunk = Chunk(document_id=doc.id, chunk_index=0, content="Python developer experience")
-    stored = [_Stored(chunk=chunk, doc=doc, jp=JobPosting(document_id=doc.id), score=0.9)]
+    chunk = Chunk(
+        document_id=doc.id, chunk_index=0, content="Python developer experience"
+    )
+    stored = [
+        _Stored(chunk=chunk, doc=doc, jp=JobPosting(document_id=doc.id), score=0.9)
+    ]
     repo = FakeRepo(stored)
 
     service = JobMatchingService(embedder=embedder, llm=llm, chunk_repo=repo)

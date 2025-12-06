@@ -1,6 +1,11 @@
 from uuid import uuid4
 
-from rag_project.rag_core.domain.models import Chunk, Document, JobPosting, RetrievedChunk
+from rag_project.rag_core.domain.models import (
+    Chunk,
+    Document,
+    JobPosting,
+    RetrievedChunk,
+)
 from rag_project.config import (
     SUPPORTED_DOC_TYPES,
     REPO_SEARCH_DEFAULT_LIMIT,
@@ -39,7 +44,9 @@ class _FakeChunkRepo:
         self.last_limit = limit
         doc = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[2])
         jp = JobPosting(document_id=doc.id, title="Result")
-        chunk = Chunk(id=uuid4(), document_id=doc.id, chunk_index=0, content="body", token_count=1)
+        chunk = Chunk(
+            id=uuid4(), document_id=doc.id, chunk_index=0, content="body", token_count=1
+        )
         return [RetrievedChunk(chunk=chunk, document=doc, job_posting=jp, score=0.9)]
 
 
@@ -69,7 +76,12 @@ def test_query_service_passes_filters_to_repo():
     repo = _FakeChunkRepo()
     service = QueryService(embedder=embedder, llm=None, chunk_repo=repo)  # type: ignore[arg-type]
 
-    service.search("question", min_match_score=TEST_MIN_MATCH_THRESHOLD, posted_after=123, doc_types=[SUPPORTED_DOC_TYPES[2]])
+    service.search(
+        "question",
+        min_match_score=TEST_MIN_MATCH_THRESHOLD,
+        posted_after=123,
+        doc_types=[SUPPORTED_DOC_TYPES[2]],
+    )
 
     assert repo.last_limit == 5
 
@@ -90,7 +102,9 @@ def test_answer_calls_search_and_llm():
 def test_build_prompt_includes_chunks():
     doc = Document(id=uuid4(), doc_type=SUPPORTED_DOC_TYPES[0])
     jp = JobPosting(document_id=doc.id, title="DocTitle", company="Co")
-    chunk = Chunk(id=uuid4(), document_id=doc.id, chunk_index=0, content="ctx", token_count=1)
+    chunk = Chunk(
+        id=uuid4(), document_id=doc.id, chunk_index=0, content="ctx", token_count=1
+    )
     rc = RetrievedChunk(chunk=chunk, document=doc, job_posting=jp, score=0.9)
 
     prompt = build_prompt("q", [rc])

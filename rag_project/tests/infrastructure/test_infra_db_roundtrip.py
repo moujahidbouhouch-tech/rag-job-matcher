@@ -78,5 +78,9 @@ def test_pgvector_search_roundtrip():
         except psycopg.OperationalError:
             pass
 
-    assert nearest is not None and nearest[0] == chunk_id, "Inserted embedding was not retrieved as nearest"
-    assert delete_count == 1, f"Cleanup did not delete inserted document {doc_id} (chunk {chunk_id}), delete_count={delete_count}"
+    assert (
+        nearest is not None and nearest[0] == chunk_id
+    ), "Inserted embedding was not retrieved as nearest"
+    assert (
+        delete_count == 1
+    ), f"Cleanup did not delete inserted document {doc_id} (chunk {chunk_id}), delete_count={delete_count}"

@@ -81,7 +81,10 @@ def test_route_handles_invalid_action_defaults_unknown():
 
     decision = router.route("something")
 
-    assert decision.action in {"foo", "unknown"}  # currently passes through; downstream should guard
+    assert decision.action in {
+        "foo",
+        "unknown",
+    }  # currently passes through; downstream should guard
 
 
 def test_route_when_llm_returns_non_json():

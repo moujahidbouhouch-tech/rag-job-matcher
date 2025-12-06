@@ -33,14 +33,18 @@ def _clean_json(text: str) -> str:
     return text.strip()
 
 
-def _build_prompt(lines: List[str], max_lines: int = CV_PROMPT_MAX_LINES) -> tuple[str, bool]:
+def _build_prompt(
+    lines: List[str], max_lines: int = CV_PROMPT_MAX_LINES
+) -> tuple[str, bool]:
     """Build prompt asking the LLM to return end-line numbers for sections."""
     truncated = False
     if len(lines) > max_lines:
         lines = lines[:max_lines]
         truncated = True
     numbered = "\n".join([f"{i}: {line}" for i, line in enumerate(lines)])
-    prompt = CV_CHUNKER_PROMPT_TEMPLATE.format(max_line=len(lines) - 1, numbered=numbered)
+    prompt = CV_CHUNKER_PROMPT_TEMPLATE.format(
+        max_line=len(lines) - 1, numbered=numbered
+    )
     return prompt, truncated
 
 
@@ -50,7 +54,9 @@ def get_llm_splits(
 ) -> Tuple[List[int], str, str, bool]:
     """Call the LLM to get split points; return points + prompt/response for debug."""
     prompt, truncated = _build_prompt(lines)
-    dynamic_max_tokens = min(CV_CHUNKER_MAX_OUTPUT_TOKENS, max(CV_MIN_RESPONSE_TOKENS, len(lines) * 4))
+    dynamic_max_tokens = min(
+        CV_CHUNKER_MAX_OUTPUT_TOKENS, max(CV_MIN_RESPONSE_TOKENS, len(lines) * 4)
+    )
     try:
         raw_response = llm_generate(prompt, max_tokens=dynamic_max_tokens)
         cleaned = _clean_json(raw_response)
@@ -63,7 +69,12 @@ def get_llm_splits(
         return sorted(set(valid)), prompt, raw_response, truncated
     except json.JSONDecodeError as exc:  # noqa: BLE001
         logger.warning("CV chunker JSON parse error: %s", exc)
-        return [], prompt, raw_response if 'raw_response' in locals() else "NO RESPONSE", truncated
+        return (
+            [],
+            prompt,
+            raw_response if "raw_response" in locals() else "NO RESPONSE",
+            truncated,
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("CV chunker LLM error: %s", exc)
         return [], prompt, str(exc), truncated
@@ -76,7 +87,11 @@ def _adjust_split_points(lines: List[str], split_points: List[int]) -> List[int]
     for pt in sorted(set(split_points)):
         if pt <= last or pt >= len(lines):
             continue
-        if pt > 0 and lines[pt].lstrip().startswith("•") and lines[pt - 1].lstrip().startswith("•"):
+        if (
+            pt > 0
+            and lines[pt].lstrip().startswith("•")
+            and lines[pt - 1].lstrip().startswith("•")
+        ):
             back = pt - 1
             while back > 0 and lines[back].lstrip().startswith("•"):
                 back -= 1

@@ -34,5 +34,7 @@ def parse_file(file_path: Path) -> str:
             raise RuntimeError(PARSER_PDF_DEPENDENCY_MESSAGE)
         return pymupdf4llm.to_markdown(str(file_path))
     # Fallback: read as text
-    logger.warning("Parsing file with unsupported suffix=%s; falling back to text read", suffix)
+    logger.warning(
+        "Parsing file with unsupported suffix=%s; falling back to text read", suffix
+    )
     return file_path.read_text(encoding="utf-8", errors="ignore")

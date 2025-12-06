@@ -51,7 +51,9 @@ class FakeChunkRepo(ChunkRepository):
         self.inserted_chunks: List[Chunk] = []
         self.inserted_embeddings: List[List[float]] = []
 
-    def insert_chunks_with_embeddings(self, chunks: List[Chunk], embeddings: List[List[float]]) -> None:
+    def insert_chunks_with_embeddings(
+        self, chunks: List[Chunk], embeddings: List[List[float]]
+    ) -> None:
         self.inserted_chunks.extend(chunks)
         self.inserted_embeddings.extend(embeddings)
 
@@ -67,7 +69,11 @@ class FakeChunkRepo(ChunkRepository):
 
 
 def load_sample_job_text() -> str:
-    sample_path = Path(__file__).resolve().parents[1] / "dummy_tests_documents" / "json_jobs_documents.json"
+    sample_path = (
+        Path(__file__).resolve().parents[1]
+        / "dummy_tests_documents"
+        / "json_jobs_documents.json"
+    )
     with open(sample_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     job = data["jobs"][0]
@@ -76,7 +82,9 @@ def load_sample_job_text() -> str:
 
 
 def load_cv_text() -> str:
-    sample_path = Path(__file__).resolve().parents[1] / "dummy_tests_documents" / "cv_sample.txt"
+    sample_path = (
+        Path(__file__).resolve().parents[1] / "dummy_tests_documents" / "cv_sample.txt"
+    )
     return sample_path.read_text(encoding="utf-8", errors="ignore")
 
 
@@ -115,6 +123,7 @@ def test_ingestion_service_ingests_file_and_chunks():
     tmp = Path("rag_project/tests/unit/tmp_cv.txt")
     tmp.write_text(load_cv_text(), encoding="utf-8")
     from rag_project.config import CHUNK_STRATEGY as CS
+
     original_cv_strategy = CS.get("cv")
     CS["cv"] = "structured"
 
@@ -129,7 +138,9 @@ def test_ingestion_service_ingests_file_and_chunks():
         overlap_tokens=12,
     )
 
-    job_id = service.ingest_file(str(tmp), metadata={"doc_type": SUPPORTED_DOC_TYPES[2]})
+    job_id = service.ingest_file(
+        str(tmp), metadata={"doc_type": SUPPORTED_DOC_TYPES[2]}
+    )
 
     assert doc_repo.inserted_docs and doc_repo.inserted_docs[0].id == job_id
     assert doc_repo.inserted_docs[0].doc_type == SUPPORTED_DOC_TYPES[2]

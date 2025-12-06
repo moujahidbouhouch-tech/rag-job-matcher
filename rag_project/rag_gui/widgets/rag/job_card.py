@@ -8,9 +8,10 @@ from rag_project.rag_gui.config import (
     GUI_JOB_LOCATION_FALLBACK,
 )
 
+
 class JobCard(QtWidgets.QFrame):
     """A card widget representing a Job Posting with a checkbox."""
-    
+
     selection_changed = QtCore.pyqtSignal(str, bool)
 
     def __init__(self, job_data: dict, parent=None):
@@ -22,7 +23,9 @@ class JobCard(QtWidgets.QFrame):
 
     def _build_ui(self):
         layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM)
+        layout.setContentsMargins(
+            PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM, PADDING_MEDIUM
+        )
         layout.setSpacing(PADDING_MEDIUM)
 
         # 1. Checkbox (Top aligned for long text)
@@ -36,32 +39,34 @@ class JobCard(QtWidgets.QFrame):
         # 2. Info Area
         info_layout = QtWidgets.QVBoxLayout()
         info_layout.setSpacing(2)
-        
+
         # FIX: Enable Word Wrap so long titles don't trigger scrollbars
         title = QtWidgets.QLabel(self.job_data.get("title", GUI_JOB_TITLE_FALLBACK))
         title.setObjectName("JobTitle")
         title.setWordWrap(True)  # <--- Added
-        
-        company = QtWidgets.QLabel(self.job_data.get("company", GUI_JOB_COMPANY_FALLBACK))
+
+        company = QtWidgets.QLabel(
+            self.job_data.get("company", GUI_JOB_COMPANY_FALLBACK)
+        )
         company.setObjectName("JobCompany")
-        company.setWordWrap(True) # <--- Added
-        
+        company.setWordWrap(True)  # <--- Added
+
         loc = self.job_data.get("location", GUI_JOB_LOCATION_FALLBACK)
         date = self.job_data.get("date", "")
         meta_text = f"{loc} • {date}" if loc else date
         meta = QtWidgets.QLabel(meta_text)
         meta.setObjectName("JobMeta")
-        meta.setWordWrap(True)    # <--- Added
+        meta.setWordWrap(True)  # <--- Added
 
         info_layout.addWidget(title)
         info_layout.addWidget(company)
         info_layout.addWidget(meta)
-        
+
         # Give the text area the ability to expand vertically
         layout.addLayout(info_layout, stretch=1)
 
     def _on_toggle(self, state):
-        is_checked = (state == QtCore.Qt.Checked)
+        is_checked = state == QtCore.Qt.Checked
         self.setProperty("selected", is_checked)
         self.style().unpolish(self)
         self.style().polish(self)

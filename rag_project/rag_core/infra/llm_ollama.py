@@ -31,13 +31,20 @@ class OllamaLLMProvider(LLMProvider):
         self.fallback_model = fallback_model or model
         self.timeout = timeout
 
-        self.client = httpx.Client(
-            base_url=self.base_url,
-            timeout=self.timeout  
+        self.client = httpx.Client(base_url=self.base_url, timeout=self.timeout)
+        logger.info(
+            "Ollama client initialized base_url=%s model=%s fallback=%s",
+            self.base_url,
+            self.model,
+            self.fallback_model,
         )
-        logger.info("Ollama client initialized base_url=%s model=%s fallback=%s", self.base_url, self.model, self.fallback_model)
 
-    def generate(self, prompt: str, model: Optional[str] = None, max_tokens: int = LLM_DEFAULT_MAX_TOKENS) -> str:
+    def generate(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        max_tokens: int = LLM_DEFAULT_MAX_TOKENS,
+    ) -> str:
         target_model = model or self.model
         payload = {
             "model": target_model,
@@ -46,19 +53,35 @@ class OllamaLLMProvider(LLMProvider):
             "options": {OLLAMA_NUM_PREDICT_KEY: max_tokens},
         }
         try:
-            resp = httpx.post(f"{self.base_url}{OLLAMA_GENERATE_PATH}", json=payload, timeout=self.timeout)
+            resp = httpx.post(
+                f"{self.base_url}{OLLAMA_GENERATE_PATH}",
+                json=payload,
+                timeout=self.timeout,
+            )
             resp.raise_for_status()
             data = resp.json()
-            logger.debug("Ollama response ok model=%s tokens=%d", target_model, max_tokens)
+            logger.debug(
+                "Ollama response ok model=%s tokens=%d", target_model, max_tokens
+            )
             return data.get("response", "")
         except httpx.HTTPError as exc:
-            logger.warning("Ollama primary model failed (%s), trying fallback=%s", exc, self.fallback_model)
+            logger.warning(
+                "Ollama primary model failed (%s), trying fallback=%s",
+                exc,
+                self.fallback_model,
+            )
             if target_model != self.fallback_model:
                 payload["model"] = self.fallback_model
-                resp = httpx.post(f"{self.base_url}{OLLAMA_GENERATE_PATH}", json=payload, timeout=self.timeout)
+                resp = httpx.post(
+                    f"{self.base_url}{OLLAMA_GENERATE_PATH}",
+                    json=payload,
+                    timeout=self.timeout,
+                )
                 resp.raise_for_status()
                 data = resp.json()
                 logger.info("Fallback Ollama model succeeded: %s", self.fallback_model)
                 return data.get("response", "")
-            logger.error("Ollama call failed with no fallback remaining: %s", exc, exc_info=True)
+            logger.error(
+                "Ollama call failed with no fallback remaining: %s", exc, exc_info=True
+            )
             raise

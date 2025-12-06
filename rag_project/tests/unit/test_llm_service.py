@@ -26,7 +26,12 @@ def test_llm_service_builds_prompt_and_returns_response(monkeypatch):
         return _DummyResponse({"response": "hello"})
 
     monkeypatch.setattr("httpx.post", fake_post)
-    provider = OllamaLLMProvider(base_url="http://ollama.test", model="primary", fallback_model="secondary", timeout=1.0)
+    provider = OllamaLLMProvider(
+        base_url="http://ollama.test",
+        model="primary",
+        fallback_model="secondary",
+        timeout=1.0,
+    )
 
     out = provider.generate("question here", max_tokens=16)
 
@@ -46,7 +51,12 @@ def test_llm_service_uses_fallback_on_http_error(monkeypatch):
         return _DummyResponse({"response": "fallback text"})
 
     monkeypatch.setattr("httpx.post", fake_post)
-    provider = OllamaLLMProvider(base_url="http://ollama.test", model="primary", fallback_model="secondary", timeout=1.0)
+    provider = OllamaLLMProvider(
+        base_url="http://ollama.test",
+        model="primary",
+        fallback_model="secondary",
+        timeout=1.0,
+    )
 
     out = provider.generate("prompt")
 
@@ -55,15 +65,27 @@ def test_llm_service_uses_fallback_on_http_error(monkeypatch):
 
 
 def test_llm_service_raises_when_unreachable(monkeypatch):
-    monkeypatch.setattr("httpx.post", lambda *_args, **_kwargs: (_ for _ in ()).throw(httpx.TimeoutException("timeout")))
-    provider = OllamaLLMProvider(base_url="http://ollama.test", model="primary", fallback_model="primary", timeout=0.1)
+    monkeypatch.setattr(
+        "httpx.post",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            httpx.TimeoutException("timeout")
+        ),
+    )
+    provider = OllamaLLMProvider(
+        base_url="http://ollama.test",
+        model="primary",
+        fallback_model="primary",
+        timeout=0.1,
+    )
 
     with pytest.raises(httpx.HTTPError):
         provider.generate("prompt", max_tokens=4)
 
 
 def test_llm_service_handles_empty_prompt(monkeypatch):
-    monkeypatch.setattr("httpx.post", lambda *_a, **_k: _DummyResponse({"response": "ok"}))
+    monkeypatch.setattr(
+        "httpx.post", lambda *_a, **_k: _DummyResponse({"response": "ok"})
+    )
     provider = OllamaLLMProvider(base_url="http://ollama.test", model="primary")
 
     out = provider.generate("", max_tokens=2)

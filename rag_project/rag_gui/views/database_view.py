@@ -31,26 +31,28 @@ class DatabaseView(QtWidgets.QWidget):
         self._conn_settings = conn_settings
         self.doc_type_stats: Dict[str, QtWidgets.QLabel] = {}
         self._worker = None
-        
+
         self._build_ui()
-        
+
         # Initial load (Silent mode: don't popup if it fails immediately)
         self.refresh_statistics(silent=True)
 
     def _build_ui(self):
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE)
+        layout.setContentsMargins(
+            PADDING_LARGE, PADDING_LARGE, PADDING_LARGE, PADDING_LARGE
+        )
         layout.setSpacing(PADDING_SMALL)
 
         # --- Header ---
         header = QtWidgets.QHBoxLayout()
         title = QtWidgets.QLabel(GUI_DBVIEW_TITLE)
         title.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_TITLE, QtGui.QFont.DemiBold))
-        
+
         self.db_indicator = StatusIndicator()
         self.db_status_label = QtWidgets.QLabel("Ready")
         self.db_status_label.setFont(QtGui.QFont(FONT_FAMILY, FONT_SIZE_LABEL))
-        
+
         header.addWidget(title)
         header.addStretch()
         header.addWidget(self.db_indicator)
@@ -76,13 +78,13 @@ class DatabaseView(QtWidgets.QWidget):
         # --- Detail Group ---
         self.doc_stats_group = QtWidgets.QGroupBox("Document Statistics")
         doc_layout = QtWidgets.QFormLayout()
-        
+
         for dt in DOC_TYPE_OPTIONS:
             label = QtWidgets.QLabel(dt.replace("_", " ").title())
             value = QtWidgets.QLabel("Waiting for data...")
             self.doc_type_stats[dt] = value
             doc_layout.addRow(label, value)
-            
+
         self.doc_stats_group.setLayout(doc_layout)
         layout.addWidget(self.doc_stats_group)
         layout.addStretch()
@@ -91,11 +93,11 @@ class DatabaseView(QtWidgets.QWidget):
         """Start background worker."""
         logger.info("DatabaseView refresh requested silent=%s", silent)
         self.db_status_label.setText(GUI_DB_STATUS_CHECKING)
-        self.db_indicator.set_status(True) # Yellow/Active
+        self.db_indicator.set_status(True)  # Yellow/Active
         self.refresh_btn.setEnabled(False)
-        
+
         # Pass the silent flag to the worker or handle it in the callback
-        self._silent_error = silent 
+        self._silent_error = silent
 
         self._worker = DatabaseOverviewWorker(self._conn_settings)
         self._worker.finished.connect(self.on_stats_loaded)
@@ -106,20 +108,20 @@ class DatabaseView(QtWidgets.QWidget):
         """Update UI with results from worker."""
         logger.info("DatabaseView stats loaded")
         self.refresh_btn.setEnabled(True)
-        self.db_indicator.set_status(True) # Green/Success
+        self.db_indicator.set_status(True)  # Green/Success
         self.db_status_label.setText("DB Connected")
 
         # 1. Update Cards
-        self.db_size_card.update_value(self._pretty_size(results['db_size']))
-        
-        free_fmt = self._pretty_size(results['disk_free'])
-        total_fmt = self._pretty_size(results['disk_total'])
+        self.db_size_card.update_value(self._pretty_size(results["db_size"]))
+
+        free_fmt = self._pretty_size(results["disk_free"])
+        total_fmt = self._pretty_size(results["disk_total"])
         self.fs_card.update_value(f"{free_fmt} free / {total_fmt}")
 
         # 2. Update Document Type Details
-        doc_counts = results.get('doc_counts', {})
-        chunk_counts = results.get('chunk_counts', {})
-        
+        doc_counts = results.get("doc_counts", {})
+        chunk_counts = results.get("chunk_counts", {})
+
         for dt, label_widget in self.doc_type_stats.items():
             d_count = doc_counts.get(dt, 0)
             c_count = chunk_counts.get(dt, 0)
@@ -128,9 +130,9 @@ class DatabaseView(QtWidgets.QWidget):
     def on_worker_error(self, error_msg: str):
         logger.error("DatabaseView worker error: %s", error_msg)
         self.refresh_btn.setEnabled(True)
-        self.db_indicator.set_status(False) # Red/Error
+        self.db_indicator.set_status(False)  # Red/Error
         self.db_status_label.setText("Connection Error")
-        
+
         # 1. Reset Top Cards to N/A
         self.db_size_card.update_value("N/A")
         self.fs_card.update_value("N/A")
@@ -140,8 +142,10 @@ class DatabaseView(QtWidgets.QWidget):
             label_widget.setText("N/A")
 
         # 3. Show error message only if NOT silent
-        if not getattr(self, '_silent_error', False):
-            QtWidgets.QMessageBox.warning(self, "Database Error", f"{GUI_DB_ERROR_PREFIX}{error_msg}")
+        if not getattr(self, "_silent_error", False):
+            QtWidgets.QMessageBox.warning(
+                self, "Database Error", f"{GUI_DB_ERROR_PREFIX}{error_msg}"
+            )
 
     @staticmethod
     def _pretty_size(num_bytes: int) -> str:

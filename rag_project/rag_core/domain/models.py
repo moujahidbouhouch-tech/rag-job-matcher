@@ -89,6 +89,7 @@ class RAGAnswer:
 @dataclass
 class JobRequirement:
     """A single requirement extracted from a job posting."""
+
     name: str
     category: str  # "Hard Skill" | "Soft Skill" | "Implicit Trait"
     search_query: str
@@ -98,6 +99,7 @@ class JobRequirement:
 @dataclass
 class RequirementEvaluation:
     """Evaluation result for one requirement against candidate evidence."""
+
     requirement: JobRequirement
     verdict: str  # "✅ MATCH" | "⚠️ PARTIAL" | "❌ MISSING" | "ERROR"
     reasoning: str
@@ -109,6 +111,7 @@ class RequirementEvaluation:
 @dataclass
 class JobMatchResult:
     """Complete job matching analysis result."""
+
     job_text: str
     extracted_requirements: List[JobRequirement]
     evaluations: List[RequirementEvaluation]

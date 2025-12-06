@@ -29,7 +29,9 @@ BOUNDARY_PATTERN_WEIGHTS = BOUNDARY_WEIGHTS
 BOUNDARY_PRIORITY_VALUES = BOUNDARY_PRIORITIES
 
 SCRUB_TABLE_REGEX = r"^\s*\|.*$"
-SCRUB_CAPTION_REGEX = r"\*\*(?:Figure|Table|Abbildung|Tabelle|Source|Quelle)\s*\d+[\d\.]*.*?(?:\*\*|$)"
+SCRUB_CAPTION_REGEX = (
+    r"\*\*(?:Figure|Table|Abbildung|Tabelle|Source|Quelle)\s*\d+[\d\.]*.*?(?:\*\*|$)"
+)
 SCRUB_PAGE_REGEX = r"\b(Page \d+|Seite \d+)\b"
 NOISE_PAGE_REGEX = r"^(page\s+)?\d+(\s+of\s+\d+)?$"
 NOISE_DOTTED_TOC_REGEX = r"\.{4,}\s*\d*$"
@@ -71,7 +73,9 @@ NOISE_REFERENCE_TOKENS = [
     "declaration",
     "eidesstattliche erklärung",
 ]
-NOISE_REFERENCE_REGEX = r"^([A-Z0-9]+\.|[0-9]+\.)*\s*(" + "|".join(NOISE_REFERENCE_TOKENS) + r")"
+NOISE_REFERENCE_REGEX = (
+    r"^([A-Z0-9]+\.|[0-9]+\.)*\s*(" + "|".join(NOISE_REFERENCE_TOKENS) + r")"
+)
 
 BOUNDARY_BLANKLINE_BOOST = 0.2
 BOUNDARY_CONFIDENCE_THRESHOLD = 0.5
@@ -82,7 +86,9 @@ PRIORITY_SPLIT_PATTERNS = {
     "sentence_end": r"(?<=[.!?])\s+(?=[A-ZÄÖÜ\-•])",
     "bullet_end": r"(?<=\S)\s*\n(?=\s*[-•]\s)",
 }
-SPLIT_WEIGHT_FORMULA = "(1 - proximity_weight) * priority_score + proximity_weight * distance_score"
+SPLIT_WEIGHT_FORMULA = (
+    "(1 - proximity_weight) * priority_score + proximity_weight * distance_score"
+)
 BOUNDARY_INCLUSIVE_OFFSET = 1
 STRUCTURED_OVERSIZE_FACTOR = 1.2
 MIN_SPLIT_RATIO = 0.5

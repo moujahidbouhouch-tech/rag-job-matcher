@@ -37,7 +37,9 @@ class FakeEmbedder:
 
 
 class FakeLLM:
-    def __init__(self, base_url, model, fallback_model=None, timeout=None, num_ctx=None):
+    def __init__(
+        self, base_url, model, fallback_model=None, timeout=None, num_ctx=None
+    ):
         self.base_url = base_url
         self.model = model
         self.fallback_model = fallback_model

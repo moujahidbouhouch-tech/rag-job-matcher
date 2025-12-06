@@ -27,12 +27,15 @@ from rag_project.rag_core.config import get_settings
 try:
     import dotenv  # noqa: F401
 except ImportError:
-    sys.modules["dotenv"] = types.SimpleNamespace(load_dotenv=lambda *args, **kwargs: None)
+    sys.modules["dotenv"] = types.SimpleNamespace(
+        load_dotenv=lambda *args, **kwargs: None
+    )
 
 # Stub sentence_transformers if unavailable.
 try:
     import sentence_transformers  # noqa: F401
 except ImportError:
+
     class _DummyModel:
         def __init__(self, *_args, **_kwargs):
             pass
@@ -42,12 +45,15 @@ except ImportError:
                 texts = [texts]
             return [[0.0] for _ in texts]
 
-    sys.modules["sentence_transformers"] = types.SimpleNamespace(SentenceTransformer=_DummyModel)
+    sys.modules["sentence_transformers"] = types.SimpleNamespace(
+        SentenceTransformer=_DummyModel
+    )
 
 # Stub httpx if unavailable.
 try:
     import httpx  # noqa: F401
 except ImportError:
+
     class _DummyHTTPError(Exception):
         pass
 
@@ -71,6 +77,7 @@ except ImportError:
 try:
     import psycopg  # noqa: F401
 except ImportError:
+
     class _OperationalError(Exception):
         pass
 
@@ -117,7 +124,9 @@ except ImportError:
 try:
     import pgvector.psycopg  # noqa: F401
 except ImportError:
-    sys.modules["pgvector.psycopg"] = types.SimpleNamespace(register_vector=lambda *_args, **_kwargs: None)
+    sys.modules["pgvector.psycopg"] = types.SimpleNamespace(
+        register_vector=lambda *_args, **_kwargs: None
+    )
 
 # Ensure project root is on sys.path so test packages resolve.
 ROOT = Path(__file__).resolve().parents[1]
@@ -127,7 +136,9 @@ if str(ROOT) not in sys.path:
 
 def _assert_valid_identifier(value: str, label: str):
     if not re.match(r"^[A-Za-z0-9_]+$", value or ""):
-        raise ValueError(f"Invalid {label}: {value!r}. Only alphanumeric characters and underscores are allowed.")
+        raise ValueError(
+            f"Invalid {label}: {value!r}. Only alphanumeric characters and underscores are allowed."
+        )
 
 
 def _service_bootstrap():
@@ -137,7 +148,9 @@ def _service_bootstrap():
     script = ROOT.parent / "scripts" / "ensure_services.sh"
     if not script.is_file():
         return
-    subprocess.run([str(script)], check=True, cwd=script.parent, text=True, capture_output=False)
+    subprocess.run(
+        [str(script)], check=True, cwd=script.parent, text=True, capture_output=False
+    )
 
 
 def _source_db_settings():
@@ -169,8 +182,13 @@ def _get_test_target() -> dict:
     port = os.getenv("TEST_DB_PORT") or TEST_DB_PORT or 5433
     dbname = os.getenv("TEST_DB_NAME") or TEST_DB_NAME or "rag_test_db"
     user = os.getenv("TEST_DB_USER") or TEST_DB_USER or "rag"
-    password = os.getenv("TEST_DB_PASSWORD") or TEST_DB_PASSWORD or DB_DEFAULT_PASSWORD or os.getenv("PGPASSWORD")
-    
+    password = (
+        os.getenv("TEST_DB_PASSWORD")
+        or TEST_DB_PASSWORD
+        or DB_DEFAULT_PASSWORD
+        or os.getenv("PGPASSWORD")
+    )
+
     return {
         "host": host,
         "port": int(port),
@@ -208,7 +226,9 @@ def _ensure_schema_exists(source: dict, target: dict):
         ).close()
     except psycopg.OperationalError:
         maint_db = "postgres"
-        print(f"[tests] creating test db {target['dbname']} (host={target['host']} port={target['port']}) from maintenance db {maint_db}")
+        print(
+            f"[tests] creating test db {target['dbname']} (host={target['host']} port={target['port']}) from maintenance db {maint_db}"
+        )
         with psycopg.connect(
             f"host={target['host']} port={target['port']} dbname={maint_db} user={target['user']}",
             password=target.get("password"),
@@ -216,12 +236,18 @@ def _ensure_schema_exists(source: dict, target: dict):
         ) as conn:
             conn.autocommit = True
             with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (target["dbname"],))
+                cur.execute(
+                    "SELECT 1 FROM pg_database WHERE datname = %s", (target["dbname"],)
+                )
                 if not cur.fetchone():
                     _assert_valid_identifier(target["dbname"], "database name")
                     _assert_valid_identifier(target["user"], "database user")
-                    print(f"[tests] creating database {target['dbname']} owned by {target['user']}")
-                    cur.execute(f"CREATE DATABASE {target['dbname']} OWNER {target['user']}")
+                    print(
+                        f"[tests] creating database {target['dbname']} owned by {target['user']}"
+                    )
+                    cur.execute(
+                        f"CREATE DATABASE {target['dbname']} OWNER {target['user']}"
+                    )
 
     # 2) Check for required tables
     required = list(REQUIRED_TABLES)
@@ -301,7 +327,9 @@ def _ensure_test_db_exists(target: dict):
         ) as conn:
             conn.autocommit = True
             with conn.cursor() as cur:
-                cur.execute(f"CREATE DATABASE {target['dbname']} OWNER {target['user']}")
+                cur.execute(
+                    f"CREATE DATABASE {target['dbname']} OWNER {target['user']}"
+                )
 
 
 def _psql_env(settings: dict) -> dict:
@@ -321,7 +349,9 @@ def _drop_create_test_db(source: dict, target: dict):
     conn_dsn = f"host={target['host']} port={target['port']} dbname={maint_db} user={target['user']}"
     import psycopg  # noqa: WPS433  # local import to honor stubs only when absent
 
-    with psycopg.connect(conn_dsn, connect_timeout=30, password=target.get("password")) as conn:
+    with psycopg.connect(
+        conn_dsn, connect_timeout=30, password=target.get("password")
+    ) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute(
@@ -382,7 +412,9 @@ def _drop_create_test_db(source: dict, target: dict):
         text=True,
     )
     if proc.returncode != 0:
-        raise RuntimeError("pg_dump/psql schema clone failed; ensure pg_dump and psql are installed and accessible")
+        raise RuntimeError(
+            "pg_dump/psql schema clone failed; ensure pg_dump and psql are installed and accessible"
+        )
     # Ensure app tables are empty after clone
     _truncate_tables(target)
 
@@ -424,7 +456,9 @@ def _bootstrap_and_clone_db():
     _service_bootstrap()
     target = _get_test_target()
     if target["dbname"] in ("rag", None, ""):
-        raise RuntimeError(f"TEST_DB_NAME must be a dedicated test DB, not '{target['dbname']}'")
+        raise RuntimeError(
+            f"TEST_DB_NAME must be a dedicated test DB, not '{target['dbname']}'"
+        )
     _ensure_test_db_exists(target)
     print(f"[tests] SESSION DB settings -> target={target['dbname']}")
     os.environ["DB_NAME"] = target["dbname"]
@@ -443,7 +477,9 @@ def _bootstrap_and_clone_db():
 def _reset_test_db():
     target = _get_test_target()
     if target["dbname"] in ("rag", None, ""):
-        raise RuntimeError(f"TEST_DB_NAME must be a dedicated test DB, not '{target['dbname']}'")
+        raise RuntimeError(
+            f"TEST_DB_NAME must be a dedicated test DB, not '{target['dbname']}'"
+        )
     print(f"[tests] PER-TEST TRUNCATE target={target['dbname']}")
     _truncate_tables(target)
     yield

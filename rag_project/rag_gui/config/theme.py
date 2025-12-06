@@ -47,8 +47,12 @@ FONT_WEIGHT_SEMIBOLD = 600
 FONT_WEIGHT_BOLD = 700
 
 # Style snippets
-GUI_CHAT_USER_QSS = "background-color: #0ea5e9; color: white; border-radius: 8px; padding: 8px;"
-GUI_CHAT_ASSISTANT_QSS = "background-color: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 8px;"
+GUI_CHAT_USER_QSS = (
+    "background-color: #0ea5e9; color: white; border-radius: 8px; padding: 8px;"
+)
+GUI_CHAT_ASSISTANT_QSS = (
+    "background-color: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 8px;"
+)
 GUI_STOP_BUTTON_STYLE = "color: {color}; border: 1px solid {color};"
 GUI_STATUS_COLORS = {"ok": "#16a34a", "error": "#ef4444"}
 

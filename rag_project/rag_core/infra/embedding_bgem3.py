@@ -20,7 +20,7 @@ class BgeM3EmbeddingProvider(EmbeddingProvider):
         logger.debug("Embedding batch size=%d", len(texts))
         embeddings = self.model.encode(texts, normalize_embeddings=True)
         return [emb.tolist() for emb in embeddings]
-    
+
     def embed_query(self, text: str) -> List[float]:
-            """Helper to embed a single query string."""
-            return self.embed([text])[0]
+        """Helper to embed a single query string."""
+        return self.embed([text])[0]
